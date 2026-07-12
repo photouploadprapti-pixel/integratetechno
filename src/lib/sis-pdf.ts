@@ -45,16 +45,20 @@ const drawCheckOption = (
   label: string,
   checked: boolean,
 ) => {
-  doc.setDrawColor(0, 0, 0)
-  doc.setLineWidth(0.35)
-  doc.rect(x, y - 3.2, 3.4, 3.4)
+  const boxSize = 3.4
+  const boxTop = y - 3.2
+
   if (checked) {
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(9)
-    doc.setTextColor(12, 41, 171)
-    doc.text('✓', x + 0.55, y - 0.4)
-    doc.setTextColor(0, 0, 0)
+    doc.setFillColor(12, 41, 171)
+    doc.setDrawColor(12, 41, 171)
+    doc.rect(x, boxTop, boxSize, boxSize, 'FD')
+  } else {
+    doc.setDrawColor(0, 0, 0)
+    doc.setLineWidth(0.35)
+    doc.rect(x, boxTop, boxSize, boxSize)
   }
+
+  doc.setTextColor(0, 0, 0)
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(10)
   doc.text(label, x + 5, y)
