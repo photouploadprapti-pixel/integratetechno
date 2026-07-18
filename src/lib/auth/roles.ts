@@ -53,6 +53,7 @@ export const getAllowedAdminPaths = (role: UserRole | null): string[] => {
     return [
       '/admin/mom',
       '/admin/sales-commission',
+      '/admin/local-sales',
       '/admin/sis',
       '/admin/income',
       '/admin/cash-book',
@@ -60,7 +61,13 @@ export const getAllowedAdminPaths = (role: UserRole | null): string[] => {
     ]
   }
   if (role === 'admin') {
-    return ['/admin/mom', '/admin/sales-commission', '/admin/sis', '/admin/cash-book']
+    return [
+      '/admin/mom',
+      '/admin/sales-commission',
+      '/admin/local-sales',
+      '/admin/sis',
+      '/admin/cash-book',
+    ]
   }
   if (role === 'employee') {
     return ['/admin/mom', '/admin/sis']

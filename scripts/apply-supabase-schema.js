@@ -72,7 +72,8 @@ const main = async () => {
         'carosol_images',
         'clients_images',
         'income_per_annum',
-        'sales_commission'
+        'sales_commission',
+        'local_sales'
       )
     order by table_name
   `)

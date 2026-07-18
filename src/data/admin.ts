@@ -13,6 +13,11 @@ export const adminNavItems: AdminNavItem[] = [
     description: 'Sales commission entries by LC',
   },
   {
+    label: 'Local Sales',
+    href: '/admin/local-sales',
+    description: 'Local sales entries with auto commission',
+  },
+  {
     label: 'S/I/S Report',
     href: '/admin/sis',
     description: 'Service / Installation / Sales reports',
@@ -45,6 +50,7 @@ export const getNavForRole = (role: UserRole | null): AdminNavItem[] => {
       (item) =>
         item.href === '/admin/mom' ||
         item.href === '/admin/sales-commission' ||
+        item.href === '/admin/local-sales' ||
         item.href === '/admin/sis' ||
         item.href === '/admin/cash-book',
     )
@@ -68,6 +74,18 @@ export const salesCommissionColumns: AdminTableColumn[] = [
   { key: 'manufacturerName', label: 'Manufacturer Name' },
   { key: 'customerName', label: 'Customer Name' },
   { key: 'lcAmount', label: 'LC Amount' },
+  { key: 'commissionAmount', label: 'Commission Amount' },
+  { key: 'remarks', label: 'Remarks' },
+  { key: 'createdBy', label: 'Created By' },
+]
+
+/** Local Sales table columns. */
+export const localSalesColumns: AdminTableColumn[] = [
+  { key: 'deliveryDate', label: 'Delivery Date' },
+  { key: 'manufacturerName', label: 'Manufacturer Name' },
+  { key: 'customerName', label: 'Customer Name' },
+  { key: 'purchaseAmount', label: 'Purchase Amount' },
+  { key: 'salesAmount', label: 'Sales Amount' },
   { key: 'commissionAmount', label: 'Commission Amount' },
   { key: 'remarks', label: 'Remarks' },
   { key: 'createdBy', label: 'Created By' },
