@@ -5,7 +5,7 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'Integrate Techno Trade',
   description:
-    'Integrate Techno Trade — industrial chemicals, techno trade solutions, and trusted partnerships.',
+    'Integrate Techno Trade — industrial chemicals, pharmaceutical equipment, and trusted partnerships.',
   icons: {
     icon: '/assets/logo.png',
   },
