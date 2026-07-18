@@ -168,7 +168,7 @@ export const LocalSalesModal = ({
               />
             </Field>
 
-            <Field label="Purchase Amount">
+            <Field label="Purchase Amount (TK)">
               <input
                 required
                 inputMode="decimal"
@@ -179,7 +179,7 @@ export const LocalSalesModal = ({
               />
             </Field>
 
-            <Field label="Sales Amount">
+            <Field label="Sales Amount (TK)">
               <input
                 required
                 inputMode="decimal"
@@ -190,7 +190,7 @@ export const LocalSalesModal = ({
               />
             </Field>
 
-            <Field label="Commission Amount" className="sm:col-span-2">
+            <Field label="Commission Amount (TK)" className="sm:col-span-2">
               <input
                 readOnly
                 value={values.commission_amount}

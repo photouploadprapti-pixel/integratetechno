@@ -179,7 +179,7 @@ export const SalesCommissionModal = ({
               />
             </Field>
 
-            <Field label="LC Amount">
+            <Field label="LC Amount (USD)">
               <input
                 inputMode="decimal"
                 value={values.lc_amount}
@@ -189,7 +189,7 @@ export const SalesCommissionModal = ({
               />
             </Field>
 
-            <Field label="Commission Amount">
+            <Field label="Commission Amount (USD)">
               <input
                 inputMode="decimal"
                 value={values.commission_amount}

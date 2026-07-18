@@ -73,8 +73,8 @@ export const salesCommissionColumns: AdminTableColumn[] = [
   { key: 'expiryDate', label: 'Expiry Date' },
   { key: 'manufacturerName', label: 'Manufacturer Name' },
   { key: 'customerName', label: 'Customer Name' },
-  { key: 'lcAmount', label: 'LC Amount' },
-  { key: 'commissionAmount', label: 'Commission Amount' },
+  { key: 'lcAmount', label: 'LC Amount (USD)' },
+  { key: 'commissionAmount', label: 'Commission Amount (USD)' },
   { key: 'remarks', label: 'Remarks' },
   { key: 'createdBy', label: 'Created By' },
 ]
@@ -84,9 +84,9 @@ export const localSalesColumns: AdminTableColumn[] = [
   { key: 'deliveryDate', label: 'Delivery Date' },
   { key: 'manufacturerName', label: 'Manufacturer Name' },
   { key: 'customerName', label: 'Customer Name' },
-  { key: 'purchaseAmount', label: 'Purchase Amount' },
-  { key: 'salesAmount', label: 'Sales Amount' },
-  { key: 'commissionAmount', label: 'Commission Amount' },
+  { key: 'purchaseAmount', label: 'Purchase Amount (TK)' },
+  { key: 'salesAmount', label: 'Sales Amount (TK)' },
+  { key: 'commissionAmount', label: 'Commission Amount (TK)' },
   { key: 'remarks', label: 'Remarks' },
   { key: 'createdBy', label: 'Created By' },
 ]
