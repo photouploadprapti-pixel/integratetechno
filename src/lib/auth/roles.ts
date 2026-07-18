@@ -50,10 +50,17 @@ export const getRoleHomePath = (role: UserRole | null) => {
  */
 export const getAllowedAdminPaths = (role: UserRole | null): string[] => {
   if (role === 'super_admin') {
-    return ['/admin/mom', '/admin/sis', '/admin/income', '/admin/cash-book', '/admin/banking']
+    return [
+      '/admin/mom',
+      '/admin/sales-commission',
+      '/admin/sis',
+      '/admin/income',
+      '/admin/cash-book',
+      '/admin/banking',
+    ]
   }
   if (role === 'admin') {
-    return ['/admin/mom', '/admin/sis', '/admin/cash-book']
+    return ['/admin/mom', '/admin/sales-commission', '/admin/sis', '/admin/cash-book']
   }
   if (role === 'employee') {
     return ['/admin/mom', '/admin/sis']

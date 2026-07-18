@@ -8,6 +8,11 @@ export const adminNavItems: AdminNavItem[] = [
     description: 'Minutes of Meeting reports',
   },
   {
+    label: 'Sales Commission',
+    href: '/admin/sales-commission',
+    description: 'Sales commission entries by LC',
+  },
+  {
     label: 'S/I/S Report',
     href: '/admin/sis',
     description: 'Service / Installation / Sales reports',
@@ -39,6 +44,7 @@ export const getNavForRole = (role: UserRole | null): AdminNavItem[] => {
     return adminNavItems.filter(
       (item) =>
         item.href === '/admin/mom' ||
+        item.href === '/admin/sales-commission' ||
         item.href === '/admin/sis' ||
         item.href === '/admin/cash-book',
     )
@@ -53,6 +59,19 @@ export const getNavForRole = (role: UserRole | null): AdminNavItem[] => {
 
 /** @deprecated Use adminNavItems / getNavForRole */
 export const superAdminNav = adminNavItems
+
+/** Sales Commission table columns. */
+export const salesCommissionColumns: AdminTableColumn[] = [
+  { key: 'lcNumber', label: 'LC Number' },
+  { key: 'shipmentDate', label: 'Shipment Date' },
+  { key: 'expiryDate', label: 'Expiry Date' },
+  { key: 'manufacturerName', label: 'Manufacturer Name' },
+  { key: 'customerName', label: 'Customer Name' },
+  { key: 'lcAmount', label: 'LC Amount' },
+  { key: 'commissionAmount', label: 'Commission Amount' },
+  { key: 'remarks', label: 'Remarks' },
+  { key: 'createdBy', label: 'Created By' },
+]
 
 /** MOM Report table columns. */
 export const momColumns: AdminTableColumn[] = [
