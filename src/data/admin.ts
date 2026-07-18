@@ -36,7 +36,12 @@ export const adminNavItems: AdminNavItem[] = [
 export const getNavForRole = (role: UserRole | null): AdminNavItem[] => {
   if (role === 'super_admin') return adminNavItems
   if (role === 'admin') {
-    return adminNavItems.filter((item) => item.href !== '/admin/banking')
+    return adminNavItems.filter(
+      (item) =>
+        item.href === '/admin/mom' ||
+        item.href === '/admin/sis' ||
+        item.href === '/admin/cash-book',
+    )
   }
   if (role === 'employee') {
     return adminNavItems.filter(

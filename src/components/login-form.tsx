@@ -44,7 +44,11 @@ export const LoginForm = () => {
     const role = getUserRole(data.user)
     const fallback = getRoleHomePath(role)
     const nextPath = searchParams.get('next') || fallback
-    router.push(nextPath.startsWith('/admin') ? nextPath : fallback)
+    const allowedNext =
+      (role === 'editor' && nextPath.startsWith('/editor')) ||
+      ((role === 'super_admin' || role === 'admin' || role === 'employee') &&
+        nextPath.startsWith('/admin'))
+    router.push(allowedNext ? nextPath : fallback)
     router.refresh()
   }
 

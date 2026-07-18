@@ -4,14 +4,18 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
 
-import { navLinks } from '@/data/landing'
 import { cn } from '@/lib/utils'
+import type { LandingContent } from '@/types/cms'
+
+type SiteHeaderProps = {
+  content: Pick<LandingContent, 'navLinks' | 'logoUrl' | 'wordmarkUrl' | 'brandName'>
+}
 
 /**
  * Sticky top navigation matching the Bubble floating header.
- * Collapses to a mobile menu below the large breakpoint.
+ * @param content - CMS-driven brand + nav links
  */
-export const SiteHeader = () => {
+export const SiteHeader = ({ content }: SiteHeaderProps) => {
   const [open, setOpen] = useState(false)
 
   return (
@@ -20,19 +24,19 @@ export const SiteHeader = () => {
         <Link
           href="/#home"
           className="flex min-w-0 shrink items-center gap-2"
-          aria-label="Integrate Techno Trade home"
+          aria-label={`${content.brandName} home`}
         >
           <Image
-            src="/assets/logo.png"
-            alt="ITT logo"
+            src={content.logoUrl}
+            alt={`${content.brandName} logo`}
             width={48}
             height={48}
             className="h-10 w-10 shrink-0 rounded-full object-cover md:h-12 md:w-12"
             priority
           />
           <Image
-            src="/assets/wordmark.png"
-            alt="Integrate Techno Trade"
+            src={content.wordmarkUrl}
+            alt={content.brandName}
             width={300}
             height={37}
             className="hidden h-7 w-auto max-w-[160px] object-contain sm:block md:h-9 md:max-w-none"
@@ -41,9 +45,9 @@ export const SiteHeader = () => {
         </Link>
 
         <nav className="ml-auto hidden items-center gap-0.5 xl:flex" aria-label="Primary">
-          {navLinks.map((link) => (
+          {content.navLinks.map((link) => (
             <Link
-              key={link.label}
+              key={`${link.label}-${link.href}`}
               href={link.href}
               className="rounded px-2 py-2 text-sm font-medium text-[#2c3d94] transition-colors hover:text-[#000b3a] lg:px-2.5"
             >
@@ -72,9 +76,9 @@ export const SiteHeader = () => {
         )}
       >
         <nav className="flex flex-col gap-1" aria-label="Mobile">
-          {navLinks.map((link) => (
+          {content.navLinks.map((link) => (
             <Link
-              key={link.label}
+              key={`mobile-${link.label}-${link.href}`}
               href={link.href}
               className="rounded-md px-3 py-3 text-base font-medium text-[#2c3d94]"
               onClick={() => setOpen(false)}

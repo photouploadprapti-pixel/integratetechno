@@ -3,7 +3,11 @@
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 
-import { clients } from '@/data/landing'
+import type { LandingContent } from '@/types/cms'
+
+type ClientsSectionProps = {
+  content: Pick<LandingContent, 'clientsTitle' | 'clients'>
+}
 
 /**
  * Returns how many client logos should show based on viewport width.
@@ -18,11 +22,12 @@ const getVisibleCount = () => {
 
 /**
  * Clients logo carousel matching Bubble's slick slideshow.
- * Adapts visible logo count for mobile, tablet, and desktop.
+ * @param content - CMS-driven clients list and title
  */
-export const ClientsSection = () => {
+export const ClientsSection = ({ content }: ClientsSectionProps) => {
   const [active, setActive] = useState(0)
   const [visibleCount, setVisibleCount] = useState(1)
+  const clients = content.clients
   const maxIndex = Math.max(0, clients.length - visibleCount)
 
   useEffect(() => {
@@ -53,7 +58,7 @@ export const ClientsSection = () => {
     <section id="clients" className="bg-[#f7f7f7] px-4 py-12 md:px-6 md:py-16">
       <div className="mx-auto max-w-6xl">
         <h2 className="mb-6 text-center font-[family-name:var(--font-righteous)] text-xl text-[#1a1a1a] sm:text-2xl md:mb-8">
-          Our Respected Clients
+          {content.clientsTitle}
         </h2>
 
         <div className="overflow-hidden rounded-[20px] bg-white p-4 shadow-sm sm:p-6 md:p-10">

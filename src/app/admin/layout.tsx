@@ -24,7 +24,7 @@ export default async function AdminLayout({
 
   const role = getUserRole(user)
   if (role !== 'super_admin' && role !== 'admin' && role !== 'employee') {
-    redirect('/login?next=/admin/mom')
+    redirect(role === 'editor' ? '/editor' : '/login?next=/admin/mom')
   }
 
   return (

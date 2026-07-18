@@ -2,12 +2,12 @@ import type { ClientItem, NavLink, ServiceItem } from '@/types/landing'
 
 /** Primary navigation links matching the Bubble site. */
 export const navLinks: NavLink[] = [
-  { label: 'Home', href: '#home' },
-  { label: 'About Us', href: '#about' },
-  { label: 'Our Services', href: '#services' },
-  { label: 'Our Clients', href: '#clients' },
-  { label: 'Contact Us', href: '#contact' },
-  { label: 'Chemical Division', href: '#services' },
+  { label: 'Home', href: '/#home' },
+  { label: 'About Us', href: '/#about' },
+  { label: 'Our Services', href: '/#services' },
+  { label: 'Our Clients', href: '/#clients' },
+  { label: 'Contact Us', href: '/#contact' },
+  { label: 'Chemical Division', href: '/chemical' },
   { label: 'Login', href: '/login' },
 ]
 

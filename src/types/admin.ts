@@ -1,5 +1,5 @@
 /** Supported application roles. */
-export type UserRole = 'super_admin' | 'admin' | 'employee'
+export type UserRole = 'super_admin' | 'admin' | 'employee' | 'editor'
 
 /** Sidebar navigation item for the admin dashboard. */
 export interface AdminNavItem {

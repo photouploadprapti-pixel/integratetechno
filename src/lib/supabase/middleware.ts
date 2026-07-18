@@ -1,10 +1,15 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-import { canAccessAdminPath, getRoleHomePath, getUserRole } from '@/lib/auth/roles'
+import {
+  canAccessAdminPath,
+  canAccessEditor,
+  getRoleHomePath,
+  getUserRole,
+} from '@/lib/auth/roles'
 
 /**
- * Refreshes the Supabase session and guards /admin routes by auth + role.
+ * Refreshes the Supabase session and guards /admin + /editor routes by auth + role.
  * @param request - Incoming Next.js request
  */
 export const updateSession = async (request: NextRequest) => {
@@ -35,10 +40,11 @@ export const updateSession = async (request: NextRequest) => {
 
   const pathname = request.nextUrl.pathname
   const isAdminRoute = pathname.startsWith('/admin')
+  const isEditorRoute = pathname.startsWith('/editor')
   const isLoginRoute = pathname.startsWith('/login')
   const role = getUserRole(user)
 
-  if (isAdminRoute && !user) {
+  if ((isAdminRoute || isEditorRoute) && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     url.searchParams.set('next', pathname)
@@ -46,9 +52,9 @@ export const updateSession = async (request: NextRequest) => {
   }
 
   if (isAdminRoute && user) {
-    if (!role) {
+    if (!role || role === 'editor') {
       const url = request.nextUrl.clone()
-      url.pathname = '/login'
+      url.pathname = role === 'editor' ? '/editor' : '/login'
       return NextResponse.redirect(url)
     }
 
@@ -59,7 +65,15 @@ export const updateSession = async (request: NextRequest) => {
     }
   }
 
-  if (isLoginRoute && user) {
+  if (isEditorRoute && user) {
+    if (!canAccessEditor(role)) {
+      const url = request.nextUrl.clone()
+      url.pathname = getRoleHomePath(role)
+      return NextResponse.redirect(url)
+    }
+  }
+
+  if (isLoginRoute && user && role) {
     const url = request.nextUrl.clone()
     url.pathname = getRoleHomePath(role)
     return NextResponse.redirect(url)
