@@ -25,6 +25,10 @@ export const STAFF_DIRECTORY: Record<string, StaffProfile> = {
     name: 'Md. Tanvir Hossen',
     designation: 'Assistant Manager',
   },
+  'service3@integratebd.com': {
+    name: 'Protty Chandro Pondit',
+    designation: 'Sr. Assistant Manager',
+  },
   'service1@integratebd.com': {
     name: 'Shohag Biswas',
     designation: 'Assistant Manager',
