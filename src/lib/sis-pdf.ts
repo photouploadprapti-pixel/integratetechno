@@ -13,12 +13,12 @@ import type { SisReport, SisServiceType } from '@/types/sis'
 const PAGE_W = 210
 const PAGE_H = 297
 const MARGIN = 12
-/** Reserved height at page bottom for the 3-column signature footer. */
+/** Signature footer block height. */
 const FOOTER_H = 52
-/** Comfortable vertical gap between field lines (mm). */
-const LINE_GAP = 5.2
-/** Slightly tighter gap for denser machine-detail rows. */
-const MACHINE_LINE_GAP = 4.8
+/** Line gap within a wrapped field. */
+const LINE_GAP = 4.6
+/** Extra gap inserted between colon-separated fields. */
+const FIELD_GAP_LINES = 1
 
 /**
  * Formats yes/no values for the SIS PDF.
@@ -36,13 +36,24 @@ const textOrEmpty = (value: string | number | null | undefined) => {
 }
 
 /**
- * Wraps each source row into lines that fit the given width.
+ * Wraps fields and inserts blank lines between each field for paragraph gaps.
  * @param doc - jsPDF instance
- * @param rows - Source text rows
+ * @param fields - Field strings (each usually contains a ":" label)
  * @param maxWidth - Max line width in mm
  */
-const wrapRows = (doc: jsPDF, rows: string[], maxWidth: number) =>
-  rows.flatMap((row) => doc.splitTextToSize(row, maxWidth) as string[])
+const wrapFieldsWithGaps = (doc: jsPDF, fields: string[], maxWidth: number) => {
+  const lines: string[] = []
+  fields.forEach((field, index) => {
+    const wrapped = doc.splitTextToSize(field, maxWidth) as string[]
+    lines.push(...wrapped)
+    if (index < fields.length - 1) {
+      for (let i = 0; i < FIELD_GAP_LINES; i += 1) {
+        lines.push('')
+      }
+    }
+  })
+  return lines
+}
 
 /**
  * Draws text lines with a fixed vertical gap between each line.
@@ -60,7 +71,9 @@ const drawSpacedLines = (
   lineGap: number,
 ) => {
   lines.forEach((line, index) => {
-    doc.text(line, x, startY + index * lineGap)
+    if (line) {
+      doc.text(line, x, startY + index * lineGap)
+    }
   })
 }
 
@@ -117,8 +130,8 @@ export interface SisPdfSigner {
 
 /**
  * Builds and downloads an S/I/S Report PDF matching the Bubble print layout.
- * Paginates long content, autofills Integrate Techno Trade signer fields, and
- * leaves blank space for a manual seal/signature.
+ * Adds field paragraph gaps, places the footer under content (no mid-page void),
+ * and shows Integrate Techno Trade values aligned to left labels.
  * @param report - S/I/S report record to render
  * @param signer - Optional Name/Designation for the Integrate Techno Trade column
  */
@@ -133,15 +146,15 @@ export const downloadSisReportPdf = async (
 
   const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' })
   const contentW = PAGE_W - MARGIN * 2
-  const contentBottom = () => PAGE_H - MARGIN - FOOTER_H
+  const pageBottom = () => PAGE_H - MARGIN
   let y = drawReportHeader(doc, logoData, wordmarkData)
 
   /**
-   * Starts a new page when the next block won't fit above the footer reserve.
+   * Starts a new page when the next block won't fit on the current page.
    * @param needed - Block height required in mm
    */
   const ensureSpace = (needed: number) => {
-    if (y + needed <= contentBottom()) return
+    if (y + needed <= pageBottom()) return
     doc.addPage()
     y = drawReportHeader(doc, logoData, wordmarkData)
     doc.setFont('helvetica', 'normal')
@@ -154,40 +167,34 @@ export const downloadSisReportPdf = async (
 
   /**
    * Draws a full-width text block with pagination support.
-   * @param lines - Wrapped text lines
+   * @param lines - Wrapped text lines (may include blank gap lines)
    * @param fontSize - Font size
-   * @param lineGap - Vertical line gap
    * @param minH - Minimum block height on a page
    */
-  const drawFullWidthBlock = (
-    lines: string[],
-    fontSize: number,
-    lineGap: number,
-    minH: number,
-  ) => {
+  const drawFullWidthBlock = (lines: string[], fontSize: number, minH: number) => {
     const padTop = 4
     const padBottom = 4
     let index = 0
 
     while (index < lines.length) {
-      const remaining = contentBottom() - y
-      const maxLines = Math.max(1, Math.floor((remaining - padTop - padBottom) / lineGap))
+      const remaining = pageBottom() - y
+      const maxLines = Math.max(1, Math.floor((remaining - padTop - padBottom) / LINE_GAP))
       if (remaining < minH && y > MARGIN + 30) {
         ensureSpace(minH)
         continue
       }
 
       const chunk = lines.slice(index, index + maxLines)
-      const chunkH = Math.max(minH, padTop + chunk.length * lineGap + padBottom)
-      if (y + chunkH > contentBottom() && index === 0) {
-        ensureSpace(chunkH)
+      const chunkH = Math.max(minH, padTop + chunk.length * LINE_GAP + padBottom)
+      if (y + chunkH > pageBottom() && index === 0) {
+        ensureSpace(Math.min(chunkH, remaining > 20 ? remaining : chunkH))
         continue
       }
 
       strokeRect(doc, MARGIN, y, contentW, chunkH)
       doc.setFont('helvetica', 'normal')
       doc.setFontSize(fontSize)
-      drawSpacedLines(doc, chunk, MARGIN + 2.5, y + padTop + 3.2, lineGap)
+      drawSpacedLines(doc, chunk, MARGIN + 2.5, y + padTop + 3.2, LINE_GAP)
       y += chunkH
       index += chunk.length
     }
@@ -209,7 +216,7 @@ export const downloadSisReportPdf = async (
   const leftX = MARGIN
   const rightX = MARGIN + leftW
 
-  const leftRows = [
+  const leftFields = [
     'Customer Details:',
     `Customer Name: ${textOrEmpty(report.customer_name)}`,
     `Location: ${textOrEmpty(report.location)}`,
@@ -219,7 +226,7 @@ export const downloadSisReportPdf = async (
     `Phone: ${textOrEmpty(report.phone)}`,
   ]
 
-  const rightRows = [
+  const rightFields = [
     `Report No.: ${textOrEmpty(report.report_no)}`,
     `Date of Report: ${formatPdfDate(report.date_of_report)}`,
     `Time Work Start On: ${formatPdfDate(report.work_starting_date)}`,
@@ -228,8 +235,11 @@ export const downloadSisReportPdf = async (
   ]
 
   doc.setFontSize(9)
-  const leftLines = wrapRows(doc, leftRows, leftW - 5)
-  const rightLines = wrapRows(doc, rightRows, rightW - 5)
+  // Keep section title tight; gap between the remaining customer fields.
+  const leftTitle = wrapFieldsWithGaps(doc, [leftFields[0]], leftW - 5)
+  const leftBody = wrapFieldsWithGaps(doc, leftFields.slice(1), leftW - 5)
+  const rightLines = wrapFieldsWithGaps(doc, rightFields, rightW - 5)
+  const leftLines = [...leftTitle, ...leftBody]
   const customerPadTop = 4
   const customerPadBottom = 4
   const customerH = Math.max(
@@ -245,16 +255,10 @@ export const downloadSisReportPdf = async (
 
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(9.5)
-  doc.text(leftLines[0], leftX + 2.5, y + customerPadTop + 3.5)
+  doc.text(leftTitle[0], leftX + 2.5, y + customerPadTop + 3.5)
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(9)
-  drawSpacedLines(
-    doc,
-    leftLines.slice(1),
-    leftX + 2.5,
-    y + customerPadTop + 3.5 + LINE_GAP,
-    LINE_GAP,
-  )
+  drawSpacedLines(doc, leftBody, leftX + 2.5, y + customerPadTop + 3.5 + LINE_GAP, LINE_GAP)
   drawSpacedLines(doc, rightLines, rightX + 2.5, y + customerPadTop + 3.5, LINE_GAP)
   y += customerH
 
@@ -267,7 +271,7 @@ export const downloadSisReportPdf = async (
   doc.text('Machine Details:', PAGE_W / 2, y + 5.4, { align: 'center' })
   y += machineTitleH
 
-  const machineLeft = [
+  const machineLeftFields = [
     `Name of the Machine/Equipment: ${textOrEmpty(report.machine_equipment_name)}`,
     `Model No.: ${textOrEmpty(report.model_no)}`,
     `Year of Installation: ${textOrEmpty(report.year_of_installation)}`,
@@ -284,7 +288,7 @@ export const downloadSisReportPdf = async (
     `If Changeable: ${yesNo(report.if_changable)}`,
   ]
 
-  const machineRight = [
+  const machineRightFields = [
     `Manufacturer: ${textOrEmpty(report.machine_manufacturer)}`,
     `Sr. No. : ${textOrEmpty(report.sr_no)}`,
     `Environment-temp: ${textOrEmpty(report.environment_temp)}${report.environment_temp ? ' °C' : ''}`,
@@ -295,18 +299,18 @@ export const downloadSisReportPdf = async (
 
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(8.7)
-  const mLeft = wrapRows(doc, machineLeft, leftW - 5)
-  const mRight = wrapRows(doc, machineRight, rightW - 5)
+  const mLeft = wrapFieldsWithGaps(doc, machineLeftFields, leftW - 5)
+  const mRight = wrapFieldsWithGaps(doc, machineRightFields, rightW - 5)
   const machinePadTop = 4
   const machinePadBottom = 4
   const totalMachineLines = Math.max(mLeft.length, mRight.length)
   let machineIndex = 0
 
   while (machineIndex < totalMachineLines) {
-    const remaining = contentBottom() - y
+    const remaining = pageBottom() - y
     const maxLines = Math.max(
       1,
-      Math.floor((remaining - machinePadTop - machinePadBottom) / MACHINE_LINE_GAP),
+      Math.floor((remaining - machinePadTop - machinePadBottom) / LINE_GAP),
     )
     if (remaining < 24 && y > MARGIN + 30) {
       ensureSpace(40)
@@ -316,9 +320,9 @@ export const downloadSisReportPdf = async (
     const chunkLeft = mLeft.slice(machineIndex, machineIndex + maxLines)
     const chunkRight = mRight.slice(machineIndex, machineIndex + maxLines)
     const chunkLines = Math.max(chunkLeft.length, chunkRight.length, 1)
-    const chunkH = machinePadTop + chunkLines * MACHINE_LINE_GAP + machinePadBottom
+    const chunkH = machinePadTop + chunkLines * LINE_GAP + machinePadBottom
 
-    if (y + chunkH > contentBottom()) {
+    if (y + chunkH > pageBottom()) {
       ensureSpace(Math.min(chunkH, 40))
       continue
     }
@@ -327,33 +331,33 @@ export const downloadSisReportPdf = async (
     strokeRect(doc, rightX, y, rightW, chunkH)
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(8.7)
-    drawSpacedLines(doc, chunkLeft, leftX + 2.5, y + machinePadTop + 3.2, MACHINE_LINE_GAP)
-    drawSpacedLines(doc, chunkRight, rightX + 2.5, y + machinePadTop + 3.2, MACHINE_LINE_GAP)
+    drawSpacedLines(doc, chunkLeft, leftX + 2.5, y + machinePadTop + 3.2, LINE_GAP)
+    drawSpacedLines(doc, chunkRight, rightX + 2.5, y + machinePadTop + 3.2, LINE_GAP)
     y += chunkH
     machineIndex += maxLines
   }
 
-  const chargeLines = [
+  const chargeFields = [
     `Service Charge for: ${textOrEmpty(report.service_charge)}`,
     `Lump-Charge@ ${textOrEmpty(report.lump_charge)} Service tax At Actual`,
     `Total Charge: ${textOrEmpty(report.total_charge)}`,
     buildDebitNoteLine(report),
   ]
   doc.setFontSize(9)
-  const chargeWrapped = wrapRows(doc, chargeLines, contentW - 5)
-  drawFullWidthBlock(chargeWrapped, 9, LINE_GAP, 20)
+  const chargeWrapped = wrapFieldsWithGaps(doc, chargeFields, contentW - 5)
+  drawFullWidthBlock(chargeWrapped, 9, 18)
 
   const remarks = `Customer Remarks: ${textOrEmpty(report.customer_remarks)}`
-  const remarksLines = wrapRows(doc, [remarks], contentW - 5)
-  drawFullWidthBlock(remarksLines, 9, LINE_GAP, 10)
+  const remarksLines = wrapFieldsWithGaps(doc, [remarks], contentW - 5)
+  drawFullWidthBlock(remarksLines, 9, 10)
 
-  // Keep footer on the current page if space remains; otherwise move to a fresh page.
-  if (y + FOOTER_H > PAGE_H - MARGIN) {
+  // Place footer directly under content; only page-break if it won't fit.
+  if (y + FOOTER_H > pageBottom()) {
     doc.addPage()
     y = drawReportHeader(doc, logoData, wordmarkData)
   }
 
-  const footerY = Math.max(y, PAGE_H - MARGIN - FOOTER_H)
+  const footerY = y
   const colW = contentW / 3
   strokeRect(doc, MARGIN, footerY, colW, FOOTER_H)
   strokeRect(doc, MARGIN + colW, footerY, colW, FOOTER_H)
@@ -365,31 +369,33 @@ export const downloadSisReportPdf = async (
     formatPdfDate(report.date_of_report) ||
     formatPdfDate(new Date().toISOString().slice(0, 10))
 
-  // Left column: blank labels for manual fill (customer / other party).
+  // Left column: labels. Middle: Integrate heading + aligned values only.
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(9)
   const leftPadX = MARGIN + 3
-  const leftTopY = footerY + 7
-  const leftGap = 6.5
-  doc.text('Signature:', leftPadX, leftTopY)
-  doc.text('Name:', leftPadX, leftTopY + leftGap)
-  doc.text('Designation:', leftPadX, leftTopY + leftGap * 2)
-  doc.text('Date:', leftPadX, leftTopY + leftGap * 3)
-
-  // Middle column: Integrate Techno Trade with autofilled Name/Designation.
   const midPadX = MARGIN + colW + 3
-  const midTopY = footerY + 6
+  const rowGap = 7
+  const valueTopY = footerY + 12
+
   doc.setFont('helvetica', 'bold')
-  doc.text('Integrate Techno Trade:', midPadX, midTopY)
+  doc.text('Integrate Techno Trade:', midPadX, footerY + 5)
   doc.setFont('helvetica', 'normal')
-  doc.text(`Name: ${signerName}`, midPadX, midTopY + 6.5)
-  doc.text(`Designation: ${signerDesignation}`, midPadX, midTopY + 12)
-  doc.text('Signature:', midPadX, midTopY + 18.5)
-  doc.text(`Date: ${footerDate}`, midPadX, footerY + FOOTER_H - 5)
+
+  doc.text('Name:', leftPadX, valueTopY)
+  doc.text(signerName, midPadX, valueTopY)
+
+  doc.text('Designation:', leftPadX, valueTopY + rowGap)
+  doc.text(signerDesignation, midPadX, valueTopY + rowGap)
+
+  doc.text('Signature:', leftPadX, valueTopY + rowGap * 2)
+  // Signature value left blank for manual seal/signature.
+
+  doc.text('Date:', leftPadX, footerY + FOOTER_H - 5)
+  doc.text(footerDate, midPadX, footerY + FOOTER_H - 5)
 
   // Right column: customer signature area.
   doc.setFont('helvetica', 'bold')
-  doc.text('Customer:', MARGIN + colW * 2 + 3, footerY + 6)
+  doc.text('Customer:', MARGIN + colW * 2 + 3, footerY + 5)
 
   doc.save(`SIS-Report-${safePdfSlug(report.customer_name || 'report')}.pdf`)
 }
