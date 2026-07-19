@@ -1,3 +1,4 @@
+import { getStaffNameByEmail } from '@/lib/staff-directory'
 import type {
   SalesCommissionFormValues,
   SalesCommissionRecord,
@@ -81,11 +82,14 @@ export const formatSalesCommissionMoney = (value: number | string | null) => {
 }
 
 /**
- * Resolves the creator email for super_admin display.
+ * Resolves the creator display name for super_admin list view.
+ * Prefers staff directory name from creator email, then joined profile name.
  * @param record - Sales commission row with optional creator join
  */
-export const getCreatorEmail = (record: SalesCommissionRecord) => {
-  const email = record.creator?.email?.trim()
-  if (email) return email
+export const getCreatorName = (record: SalesCommissionRecord) => {
+  const fromDirectory = getStaffNameByEmail(record.creator?.email)
+  if (fromDirectory) return fromDirectory
+  const name = record.creator?.name?.trim()
+  if (name) return name
   return '—'
 }

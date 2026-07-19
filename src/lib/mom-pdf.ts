@@ -2,7 +2,6 @@ import { jsPDF } from 'jspdf'
 
 import {
   REPORT_COMPANY,
-  drawCompanySeal,
   drawReportHeader,
   formatPdfDate,
   loadImageDataUrl,
@@ -17,13 +16,13 @@ const MARGIN = 14
 
 /**
  * Builds and downloads a MOM Report PDF matching the Bubble print layout.
+ * Leaves blank space at the bottom for a manual company seal and signature.
  * @param report - MOM report record to render
  */
 export const downloadMomReportPdf = async (report: MomReport) => {
-  const [logoData, wordmarkData, sealData] = await Promise.all([
+  const [logoData, wordmarkData] = await Promise.all([
     loadImageDataUrl('/assets/logo.png'),
     loadImageDataUrl('/assets/wordmark.png'),
-    loadImageDataUrl('/assets/mom/company-seal.png'),
   ])
 
   const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' })
@@ -129,10 +128,10 @@ export const downloadMomReportPdf = async (report: MomReport) => {
   doc.text(bodyWrapped, tableX + 3, y + 6)
   y += bodyH + 8
 
+  // Reserve blank space at bottom-right for manual seal + signature.
   const sealSize = 32
   const stampX = PAGE_W - MARGIN - sealSize - 2
   const stampY = Math.min(y, PAGE_H - 48)
-  drawCompanySeal(doc, sealData, stampX, stampY, sealSize)
 
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(10)

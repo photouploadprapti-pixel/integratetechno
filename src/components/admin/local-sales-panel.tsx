@@ -8,7 +8,7 @@ import { localSalesColumns } from '@/data/admin'
 import { getUserRole } from '@/lib/auth/roles'
 import {
   formatLocalSalesMoney,
-  getLocalSalesCreatorEmail,
+  getLocalSalesCreatorName,
   parseLocalSalesNumber,
 } from '@/lib/local-sales'
 import { formatDisplayDate } from '@/lib/mom'
@@ -91,7 +91,7 @@ export const LocalSalesPanel = () => {
         record.purchase_amount !== null ? String(record.purchase_amount) : '',
         record.sales_amount !== null ? String(record.sales_amount) : '',
         record.commission_amount !== null ? String(record.commission_amount) : '',
-        getLocalSalesCreatorEmail(record),
+        getLocalSalesCreatorName(record),
       ]
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(q)),
@@ -315,7 +315,7 @@ export const LocalSalesPanel = () => {
                     </td>
                     {isSuperAdmin ? (
                       <td className="whitespace-nowrap px-4 py-3.5 text-[#1f2a44]">
-                        {getLocalSalesCreatorEmail(record)}
+                        {getLocalSalesCreatorName(record)}
                       </td>
                     ) : null}
                     <td className="px-4 py-3.5">

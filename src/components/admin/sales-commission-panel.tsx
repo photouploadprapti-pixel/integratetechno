@@ -9,7 +9,7 @@ import { getUserRole } from '@/lib/auth/roles'
 import { formatDisplayDate } from '@/lib/mom'
 import {
   formatSalesCommissionMoney,
-  getCreatorEmail,
+  getCreatorName,
   parseSalesCommissionNumber,
 } from '@/lib/sales-commission'
 import { createClient } from '@/lib/supabase/client'
@@ -94,7 +94,7 @@ export const SalesCommissionPanel = () => {
         record.remarks,
         record.lc_amount !== null ? String(record.lc_amount) : '',
         record.commission_amount !== null ? String(record.commission_amount) : '',
-        getCreatorEmail(record),
+        getCreatorName(record),
       ]
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(q)),
@@ -322,7 +322,7 @@ export const SalesCommissionPanel = () => {
                     </td>
                     {isSuperAdmin ? (
                       <td className="whitespace-nowrap px-4 py-3.5 text-[#1f2a44]">
-                        {getCreatorEmail(record)}
+                        {getCreatorName(record)}
                       </td>
                     ) : null}
                     <td className="px-4 py-3.5">

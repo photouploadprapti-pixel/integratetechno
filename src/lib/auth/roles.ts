@@ -1,5 +1,6 @@
 import type { User } from '@supabase/supabase-js'
 
+import { getStaffNameByEmail } from '@/lib/staff-directory'
 import type { UserRole } from '@/types/admin'
 
 const VALID_ROLES: UserRole[] = ['super_admin', 'admin', 'employee', 'editor']
@@ -24,9 +25,13 @@ export const getUserRole = (user: User | null): UserRole | null => {
 
 /**
  * Returns a display name for the signed-in user.
+ * Prefers the staff directory name for known emails.
  * @param user - Authenticated Supabase user
  */
 export const getUserDisplayName = (user: User) => {
+  const directoryName = getStaffNameByEmail(user.email)
+  if (directoryName) return directoryName
+
   const fullName = user.user_metadata?.full_name
   if (typeof fullName === 'string' && fullName.trim()) return fullName.trim()
   return user.email?.split('@')[0] || 'User'

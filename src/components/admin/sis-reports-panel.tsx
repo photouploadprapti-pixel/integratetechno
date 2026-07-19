@@ -8,6 +8,7 @@ import { sisColumns } from '@/data/admin'
 import { formatDisplayDate } from '@/lib/mom'
 import { parseOptionalNumber, sisServiceTypesLabel } from '@/lib/sis'
 import { downloadSisReportPdf } from '@/lib/sis-pdf'
+import { getStaffProfileByEmail } from '@/lib/staff-directory'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import type { SisReport, SisReportFormValues } from '@/types/sis'
@@ -213,13 +214,24 @@ export const SisReportsPanel = () => {
 
   /**
    * Generates and downloads an S/I/S Report PDF for one row.
+   * Autofills Name/Designation from the logged-in staff directory profile.
    * @param report - Report to print
    */
   const handlePrint = async (report: SisReport) => {
     setPrintingId(report.id)
     setListError('')
     try {
-      await downloadSisReportPdf(report)
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      const profile = getStaffProfileByEmail(user?.email)
+      await downloadSisReportPdf(
+        report,
+        profile
+          ? { name: profile.name, designation: profile.designation }
+          : null,
+      )
     } catch (printError) {
       const message =
         printError instanceof Error ? printError.message : 'Failed to generate S/I/S PDF'
