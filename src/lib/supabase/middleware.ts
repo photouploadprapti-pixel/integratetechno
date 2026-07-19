@@ -58,7 +58,7 @@ export const updateSession = async (request: NextRequest) => {
       return NextResponse.redirect(url)
     }
 
-    if (!canAccessAdminPath(role, pathname)) {
+    if (!canAccessAdminPath(role, pathname, user.email)) {
       const url = request.nextUrl.clone()
       url.pathname = getRoleHomePath(role)
       return NextResponse.redirect(url)

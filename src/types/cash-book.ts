@@ -1,6 +1,24 @@
 /** Payment type matching public.payment_type. */
 export type PaymentType = 'cheque' | 'cash'
 
+/** Expense categories for Cash Book filtering and reporting. */
+export type CashBookExpenseCategory =
+  | 'Miscellaneous'
+  | 'Car maintainance'
+  | 'Convence'
+  | 'Fuel cost'
+  | 'Food (Bazar)'
+  | 'Outside Food'
+  | 'House Rent'
+  | 'Internet'
+  | 'Salary'
+  | 'Stationary'
+  | 'Service Charge'
+  | 'Tour Expense'
+  | 'Visitor Expense'
+  | 'Tech Expenses'
+  | 'Local Transportation'
+
 /** Cash book record stored in public.cash_book. */
 export interface CashBookRecord {
   id: string
@@ -9,6 +27,7 @@ export interface CashBookRecord {
   amount: number | null
   details: string | null
   remarks: string | null
+  expense_category: CashBookExpenseCategory | null
   created_at?: string
   updated_at?: string
 }
@@ -20,4 +39,5 @@ export interface CashBookFormValues {
   amount: string
   details: string
   remarks: string
+  expense_category: CashBookExpenseCategory | ''
 }

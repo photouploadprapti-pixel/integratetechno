@@ -10,15 +10,18 @@ import type { UserRole } from '@/types/admin'
  * Client shell wrapping admin pages with header + role-aware sidebar.
  * @param displayName - Signed-in user display name
  * @param role - Signed-in user role for nav filtering
+ * @param email - Signed-in user email for Cash Book access checks
  * @param children - Page content
  */
 export const AdminShell = ({
   displayName,
   role,
+  email,
   children,
 }: {
   displayName: string
   role: UserRole
+  email?: string | null
   children: ReactNode
 }) => {
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -30,6 +33,7 @@ export const AdminShell = ({
       <div className="flex min-h-[calc(100vh-65px)]">
         <AdminSidebar
           role={role}
+          email={email}
           mobileOpen={mobileOpen}
           onNavigate={() => setMobileOpen(false)}
         />

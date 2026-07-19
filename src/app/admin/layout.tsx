@@ -28,7 +28,7 @@ export default async function AdminLayout({
   }
 
   return (
-    <AdminShell displayName={getUserDisplayName(user)} role={role}>
+    <AdminShell displayName={getUserDisplayName(user)} role={role} email={user.email}>
       {children}
     </AdminShell>
   )

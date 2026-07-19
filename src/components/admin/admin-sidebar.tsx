@@ -8,22 +8,25 @@ import { cn } from '@/lib/utils'
 import type { UserRole } from '@/types/admin'
 
 /**
- * Left sidebar navigation filtered by the signed-in user's role.
+ * Left sidebar navigation filtered by the signed-in user's role and email.
  * @param role - Application role controlling visible modules
+ * @param email - Signed-in email for Cash Book access exception
  * @param mobileOpen - Whether the mobile drawer is open
  * @param onNavigate - Callback after a mobile nav click
  */
 export const AdminSidebar = ({
   role,
+  email,
   mobileOpen,
   onNavigate,
 }: {
   role: UserRole
+  email?: string | null
   mobileOpen?: boolean
   onNavigate?: () => void
 }) => {
   const pathname = usePathname()
-  const navItems = getNavForRole(role)
+  const navItems = getNavForRole(role, email)
 
   return (
     <>

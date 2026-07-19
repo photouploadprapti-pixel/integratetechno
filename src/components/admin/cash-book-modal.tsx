@@ -3,6 +3,7 @@
 import { useEffect, useId, useState, type FormEvent, type ReactNode } from 'react'
 
 import {
+  CASH_BOOK_EXPENSE_CATEGORIES,
   cashBookRecordToFormValues,
   emptyCashBookFormValues,
 } from '@/lib/cash-book'
@@ -132,6 +133,27 @@ export const CashBookModal = ({
                 onChange={(event) => updateField('date', event.target.value)}
                 className={inputClassName}
               />
+            </Field>
+
+            <Field label="Category">
+              <select
+                required
+                value={values.expense_category}
+                onChange={(event) =>
+                  updateField(
+                    'expense_category',
+                    event.target.value as CashBookFormValues['expense_category'],
+                  )
+                }
+                className={inputClassName}
+              >
+                <option value="">Choose a category...</option>
+                {CASH_BOOK_EXPENSE_CATEGORIES.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
             </Field>
 
             <Field label="Payment Type">

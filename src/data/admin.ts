@@ -1,3 +1,4 @@
+import { canAccessCashBook } from '@/lib/auth/roles'
 import type { AdminNavItem, AdminTableColumn, AdminTableRow, UserRole } from '@/types/admin'
 
 /** Full module list; filtered per role at render time. */
@@ -40,20 +41,27 @@ export const adminNavItems: AdminNavItem[] = [
 ]
 
 /**
- * Returns sidebar modules visible for a given role.
+ * Returns sidebar modules visible for a given role (and email for Cash Book).
  * @param role - Signed-in user role
+ * @param email - Signed-in user email
  */
-export const getNavForRole = (role: UserRole | null): AdminNavItem[] => {
+export const getNavForRole = (
+  role: UserRole | null,
+  email?: string | null,
+): AdminNavItem[] => {
   if (role === 'super_admin') return adminNavItems
   if (role === 'admin') {
-    return adminNavItems.filter(
-      (item) =>
+    return adminNavItems.filter((item) => {
+      if (item.href === '/admin/cash-book') {
+        return canAccessCashBook(role, email)
+      }
+      return (
         item.href === '/admin/mom' ||
         item.href === '/admin/sales-commission' ||
         item.href === '/admin/local-sales' ||
-        item.href === '/admin/sis' ||
-        item.href === '/admin/cash-book',
-    )
+        item.href === '/admin/sis'
+      )
+    })
   }
   if (role === 'employee') {
     return adminNavItems.filter(
@@ -189,7 +197,9 @@ export const incomeRows: AdminTableRow[] = [
 
 /** Cash book table columns. */
 export const cashBookColumns: AdminTableColumn[] = [
+  { key: 'mark', label: 'Mark' },
   { key: 'date', label: 'Date' },
+  { key: 'category', label: 'Category' },
   { key: 'paymentType', label: 'Payment Type' },
   { key: 'amount', label: 'Amount' },
   { key: 'details', label: 'Details' },

@@ -1,6 +1,29 @@
-import type { CashBookFormValues, CashBookRecord } from '@/types/cash-book'
+import type {
+  CashBookExpenseCategory,
+  CashBookFormValues,
+  CashBookRecord,
+} from '@/types/cash-book'
 
 export { formatPaymentType, paymentTypeOptions } from '@/lib/options'
+
+/** Fixed Cash Book expense categories for forms and filters. */
+export const CASH_BOOK_EXPENSE_CATEGORIES: CashBookExpenseCategory[] = [
+  'Miscellaneous',
+  'Car maintainance',
+  'Convence',
+  'Fuel cost',
+  'Food (Bazar)',
+  'Outside Food',
+  'House Rent',
+  'Internet',
+  'Salary',
+  'Stationary',
+  'Service Charge',
+  'Tour Expense',
+  'Visitor Expense',
+  'Tech Expenses',
+  'Local Transportation',
+]
 
 /**
  * Returns today's date as YYYY-MM-DD for date inputs.
@@ -20,6 +43,7 @@ export const emptyCashBookFormValues = (): CashBookFormValues => ({
   amount: '',
   details: '',
   remarks: '',
+  expense_category: '',
 })
 
 /**
@@ -48,6 +72,16 @@ export const formatAmount = (value: number | string | null) => {
 }
 
 /**
+ * Sums cash book amounts from a list of records.
+ * @param records - Records to total
+ */
+export const sumCashBookAmounts = (records: CashBookRecord[]) =>
+  records.reduce((total, record) => {
+    const amount = typeof record.amount === 'number' ? record.amount : Number(record.amount)
+    return total + (Number.isFinite(amount) ? amount : 0)
+  }, 0)
+
+/**
  * Maps a Cash Book DB row into form values.
  * @param record - Existing cash book record
  */
@@ -60,4 +94,5 @@ export const cashBookRecordToFormValues = (record: CashBookRecord): CashBookForm
       : String(record.amount),
   details: record.details || '',
   remarks: record.remarks || '',
+  expense_category: record.expense_category || '',
 })

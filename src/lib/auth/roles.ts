@@ -5,6 +5,9 @@ import type { UserRole } from '@/types/admin'
 
 const VALID_ROLES: UserRole[] = ['super_admin', 'admin', 'employee', 'editor']
 
+/** Only this admin email may use Cash Book besides super_admin. */
+export const CASH_BOOK_ALLOWED_EMAIL = 'service2@integratebd.com'
+
 /**
  * Reads the application role from a Supabase user object.
  * @param user - Authenticated Supabase user
@@ -38,6 +41,18 @@ export const getUserDisplayName = (user: User) => {
 }
 
 /**
+ * Whether Cash Book is visible/usable for this role + email.
+ * All super_admins, plus service2@integratebd.com among admins.
+ * @param role - Application role
+ * @param email - Signed-in user email
+ */
+export const canAccessCashBook = (role: UserRole | null, email?: string | null) => {
+  if (role === 'super_admin') return true
+  if (role !== 'admin') return false
+  return (email || '').trim().toLowerCase() === CASH_BOOK_ALLOWED_EMAIL
+}
+
+/**
  * Returns the home path for a given role after login.
  * @param role - Application role
  */
@@ -52,8 +67,12 @@ export const getRoleHomePath = (role: UserRole | null) => {
 /**
  * Module paths each staff role is allowed to open under /admin.
  * @param role - Application role
+ * @param email - Signed-in user email (needed for Cash Book exception)
  */
-export const getAllowedAdminPaths = (role: UserRole | null): string[] => {
+export const getAllowedAdminPaths = (
+  role: UserRole | null,
+  email?: string | null,
+): string[] => {
   if (role === 'super_admin') {
     return [
       '/admin/mom',
@@ -66,13 +85,16 @@ export const getAllowedAdminPaths = (role: UserRole | null): string[] => {
     ]
   }
   if (role === 'admin') {
-    return [
+    const paths = [
       '/admin/mom',
       '/admin/sales-commission',
       '/admin/local-sales',
       '/admin/sis',
-      '/admin/cash-book',
     ]
+    if (canAccessCashBook(role, email)) {
+      paths.push('/admin/cash-book')
+    }
+    return paths
   }
   if (role === 'employee') {
     return ['/admin/mom', '/admin/sis']
@@ -84,14 +106,19 @@ export const getAllowedAdminPaths = (role: UserRole | null): string[] => {
  * Whether a role can access a given admin pathname.
  * @param role - Application role
  * @param pathname - Current URL path
+ * @param email - Signed-in user email
  */
-export const canAccessAdminPath = (role: UserRole | null, pathname: string) => {
+export const canAccessAdminPath = (
+  role: UserRole | null,
+  pathname: string,
+  email?: string | null,
+) => {
   if (role === 'editor') return false
   if (pathname === '/admin' || pathname === '/admin/') {
     return role === 'super_admin' || role === 'admin' || role === 'employee'
   }
 
-  const allowed = getAllowedAdminPaths(role)
+  const allowed = getAllowedAdminPaths(role, email)
   return allowed.some(
     (path) => pathname === path || pathname.startsWith(`${path}/`),
   )
