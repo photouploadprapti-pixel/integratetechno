@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 
+import { EditorItemModal } from '@/components/editor/editor-item-modal'
 import { ImageField } from '@/components/editor/image-field'
 import { TextField } from '@/components/editor/text-field'
 import { saveSiteContent } from '@/lib/cms/client'
@@ -11,6 +12,8 @@ type LandingEditorPanelProps = {
   initialContent: LandingContent
 }
 
+type AddModalKind = 'link' | 'slide' | 'service' | 'client' | null
+
 /**
  * Creates a unique id for new CMS list items.
  */
@@ -18,12 +21,29 @@ const createId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
 
 /**
  * Full landing-page CMS editor with text, images, and list management.
+ * Add buttons open create popups for their corresponding section.
  * @param initialContent - Current landing CMS document
  */
 export const LandingEditorPanel = ({ initialContent }: LandingEditorPanelProps) => {
   const [content, setContent] = useState(initialContent)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
+  const [addModal, setAddModal] = useState<AddModalKind>(null)
+
+  const [linkForm, setLinkForm] = useState({ label: '', href: '/#home' })
+  const [slideForm, setSlideForm] = useState({
+    label: '',
+    image: '/assets/carousel/slide-1.png',
+  })
+  const [serviceForm, setServiceForm] = useState({
+    name: '',
+    company: '',
+    image: '/assets/products/tablet-compressor.png',
+  })
+  const [clientForm, setClientForm] = useState({
+    name: '',
+    image: '/assets/clients/client-01.png',
+  })
 
   /**
    * Updates a top-level landing content field.
@@ -32,6 +52,81 @@ export const LandingEditorPanel = ({ initialContent }: LandingEditorPanelProps) 
    */
   const updateField = <K extends keyof LandingContent>(key: K, value: LandingContent[K]) => {
     setContent((current) => ({ ...current, [key]: value }))
+  }
+
+  /**
+   * Opens an add popup with empty defaults for that section.
+   * @param kind - Section to add into
+   */
+  const openAddModal = (kind: Exclude<AddModalKind, null>) => {
+    if (kind === 'link') setLinkForm({ label: '', href: '/#home' })
+    if (kind === 'slide') {
+      setSlideForm({ label: '', image: '/assets/carousel/slide-1.png' })
+    }
+    if (kind === 'service') {
+      setServiceForm({
+        name: '',
+        company: '',
+        image: '/assets/products/tablet-compressor.png',
+      })
+    }
+    if (kind === 'client') {
+      setClientForm({ name: '', image: '/assets/clients/client-01.png' })
+    }
+    setAddModal(kind)
+  }
+
+  /**
+   * Closes the active add popup.
+   */
+  const closeAddModal = () => setAddModal(null)
+
+  /**
+   * Commits the active add-popup form into the matching content list.
+   */
+  const handleAddSubmit = () => {
+    if (addModal === 'link') {
+      if (!linkForm.label.trim() || !linkForm.href.trim()) return
+      updateField('navLinks', [
+        ...content.navLinks,
+        { label: linkForm.label.trim(), href: linkForm.href.trim() },
+      ])
+    }
+    if (addModal === 'slide') {
+      if (!slideForm.label.trim() || !slideForm.image.trim()) return
+      updateField('heroSlides', [
+        ...content.heroSlides,
+        {
+          id: createId(),
+          label: slideForm.label.trim(),
+          image: slideForm.image.trim(),
+        },
+      ])
+    }
+    if (addModal === 'service') {
+      if (!serviceForm.name.trim() || !serviceForm.company.trim()) return
+      updateField('services', [
+        ...content.services,
+        {
+          id: createId(),
+          name: serviceForm.name.trim(),
+          company: serviceForm.company.trim(),
+          image: serviceForm.image.trim() || '/assets/products/tablet-compressor.png',
+        },
+      ])
+    }
+    if (addModal === 'client') {
+      if (!clientForm.name.trim()) return
+      updateField('clients', [
+        ...content.clients,
+        {
+          id: createId(),
+          name: clientForm.name.trim(),
+          image: clientForm.image.trim() || '/assets/clients/client-01.png',
+        },
+      ])
+    }
+    closeAddModal()
   }
 
   /**
@@ -111,12 +206,7 @@ export const LandingEditorPanel = ({ initialContent }: LandingEditorPanelProps) 
           <button
             type="button"
             className="text-sm font-medium text-[#0c29ab]"
-            onClick={() =>
-              updateField('navLinks', [
-                ...content.navLinks,
-                { label: 'New link', href: '/#home' },
-              ])
-            }
+            onClick={() => openAddModal('link')}
           >
             + Add link
           </button>
@@ -168,12 +258,7 @@ export const LandingEditorPanel = ({ initialContent }: LandingEditorPanelProps) 
           <button
             type="button"
             className="text-sm font-medium text-[#0c29ab]"
-            onClick={() =>
-              updateField('heroSlides', [
-                ...content.heroSlides,
-                { id: createId(), image: '/assets/carousel/slide-1.png', label: 'New slide' },
-              ])
-            }
+            onClick={() => openAddModal('slide')}
           >
             + Add slide
           </button>
@@ -272,17 +357,7 @@ export const LandingEditorPanel = ({ initialContent }: LandingEditorPanelProps) 
           <button
             type="button"
             className="text-sm font-medium text-[#0c29ab]"
-            onClick={() =>
-              updateField('services', [
-                ...content.services,
-                {
-                  id: createId(),
-                  name: 'New service',
-                  company: 'Company',
-                  image: '/assets/products/tablet-compressor.png',
-                },
-              ])
-            }
+            onClick={() => openAddModal('service')}
           >
             + Add service
           </button>
@@ -371,16 +446,7 @@ export const LandingEditorPanel = ({ initialContent }: LandingEditorPanelProps) 
           <button
             type="button"
             className="text-sm font-medium text-[#0c29ab]"
-            onClick={() =>
-              updateField('clients', [
-                ...content.clients,
-                {
-                  id: createId(),
-                  name: 'New client',
-                  image: '/assets/clients/client-01.png',
-                },
-              ])
-            }
+            onClick={() => openAddModal('client')}
           >
             + Add client
           </button>
@@ -473,6 +539,94 @@ export const LandingEditorPanel = ({ initialContent }: LandingEditorPanelProps) 
       >
         {saving ? 'Saving…' : 'Save landing page'}
       </button>
+
+      <EditorItemModal
+        open={addModal === 'link'}
+        subtitle="Navigation"
+        title="Add navigation link"
+        submitLabel="Add link"
+        onClose={closeAddModal}
+        onSubmit={handleAddSubmit}
+      >
+        <TextField
+          label="Label"
+          value={linkForm.label}
+          onChange={(value) => setLinkForm((current) => ({ ...current, label: value }))}
+        />
+        <TextField
+          label="Href"
+          value={linkForm.href}
+          onChange={(value) => setLinkForm((current) => ({ ...current, href: value }))}
+        />
+      </EditorItemModal>
+
+      <EditorItemModal
+        open={addModal === 'slide'}
+        subtitle="Hero slideshow"
+        title="Add hero slide"
+        submitLabel="Add slide"
+        onClose={closeAddModal}
+        onSubmit={handleAddSubmit}
+      >
+        <TextField
+          label="Caption"
+          value={slideForm.label}
+          onChange={(value) => setSlideForm((current) => ({ ...current, label: value }))}
+        />
+        <ImageField
+          label="Slide image"
+          value={slideForm.image}
+          folder="carousel"
+          onChange={(value) => setSlideForm((current) => ({ ...current, image: value }))}
+        />
+      </EditorItemModal>
+
+      <EditorItemModal
+        open={addModal === 'service'}
+        subtitle="Services"
+        title="Add service"
+        submitLabel="Add service"
+        onClose={closeAddModal}
+        onSubmit={handleAddSubmit}
+      >
+        <TextField
+          label="Name"
+          value={serviceForm.name}
+          onChange={(value) => setServiceForm((current) => ({ ...current, name: value }))}
+        />
+        <TextField
+          label="Company"
+          value={serviceForm.company}
+          onChange={(value) => setServiceForm((current) => ({ ...current, company: value }))}
+        />
+        <ImageField
+          label="Product image"
+          value={serviceForm.image}
+          folder="products"
+          onChange={(value) => setServiceForm((current) => ({ ...current, image: value }))}
+        />
+      </EditorItemModal>
+
+      <EditorItemModal
+        open={addModal === 'client'}
+        subtitle="Clients"
+        title="Add client"
+        submitLabel="Add client"
+        onClose={closeAddModal}
+        onSubmit={handleAddSubmit}
+      >
+        <TextField
+          label="Client name"
+          value={clientForm.name}
+          onChange={(value) => setClientForm((current) => ({ ...current, name: value }))}
+        />
+        <ImageField
+          label="Logo"
+          value={clientForm.image}
+          folder="clients"
+          onChange={(value) => setClientForm((current) => ({ ...current, image: value }))}
+        />
+      </EditorItemModal>
     </div>
   )
 }

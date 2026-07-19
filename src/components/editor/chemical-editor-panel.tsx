@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 
+import { EditorItemModal } from '@/components/editor/editor-item-modal'
 import { ImageField } from '@/components/editor/image-field'
 import { TextField } from '@/components/editor/text-field'
 import { saveSiteContent } from '@/lib/cms/client'
@@ -11,6 +12,8 @@ type ChemicalEditorPanelProps = {
   initialContent: ChemicalContent
 }
 
+type AddModalKind = 'slide' | 'brand' | null
+
 /**
  * Creates a unique id for new CMS list items.
  */
@@ -18,12 +21,24 @@ const createId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
 
 /**
  * Chemical Division CMS editor for hero slides and brand partners.
+ * Add buttons open create popups for their corresponding section.
  * @param initialContent - Current chemical CMS document
  */
 export const ChemicalEditorPanel = ({ initialContent }: ChemicalEditorPanelProps) => {
   const [content, setContent] = useState(initialContent)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
+  const [addModal, setAddModal] = useState<AddModalKind>(null)
+
+  const [slideForm, setSlideForm] = useState({
+    image: '/assets/chemical/hero-1.jpg',
+  })
+  const [brandForm, setBrandForm] = useState({
+    name: '',
+    logo: '/assets/chemical/gattefosse.png',
+    description: '',
+    highlight: '',
+  })
 
   /**
    * Updates a top-level chemical content field.
@@ -35,6 +50,57 @@ export const ChemicalEditorPanel = ({ initialContent }: ChemicalEditorPanelProps
     value: ChemicalContent[K],
   ) => {
     setContent((current) => ({ ...current, [key]: value }))
+  }
+
+  /**
+   * Opens an add popup with empty defaults for that section.
+   * @param kind - Section to add into
+   */
+  const openAddModal = (kind: Exclude<AddModalKind, null>) => {
+    if (kind === 'slide') {
+      setSlideForm({ image: '/assets/chemical/hero-1.jpg' })
+    }
+    if (kind === 'brand') {
+      setBrandForm({
+        name: '',
+        logo: '/assets/chemical/gattefosse.png',
+        description: '',
+        highlight: '',
+      })
+    }
+    setAddModal(kind)
+  }
+
+  /**
+   * Closes the active add popup.
+   */
+  const closeAddModal = () => setAddModal(null)
+
+  /**
+   * Commits the active add-popup form into the matching content list.
+   */
+  const handleAddSubmit = () => {
+    if (addModal === 'slide') {
+      if (!slideForm.image.trim()) return
+      updateField('heroSlides', [
+        ...content.heroSlides,
+        { id: createId(), image: slideForm.image.trim() },
+      ])
+    }
+    if (addModal === 'brand') {
+      if (!brandForm.name.trim()) return
+      updateField('brands', [
+        ...content.brands,
+        {
+          id: createId(),
+          name: brandForm.name.trim(),
+          logo: brandForm.logo.trim() || '/assets/chemical/gattefosse.png',
+          description: brandForm.description.trim(),
+          highlight: brandForm.highlight.trim(),
+        },
+      ])
+    }
+    closeAddModal()
   }
 
   /**
@@ -99,12 +165,7 @@ export const ChemicalEditorPanel = ({ initialContent }: ChemicalEditorPanelProps
           <button
             type="button"
             className="text-sm font-medium text-[#0c29ab]"
-            onClick={() =>
-              updateField('heroSlides', [
-                ...content.heroSlides,
-                { id: createId(), image: '/assets/chemical/hero-1.jpg' },
-              ])
-            }
+            onClick={() => openAddModal('slide')}
           >
             + Add slide
           </button>
@@ -148,18 +209,7 @@ export const ChemicalEditorPanel = ({ initialContent }: ChemicalEditorPanelProps
           <button
             type="button"
             className="text-sm font-medium text-[#0c29ab]"
-            onClick={() =>
-              updateField('brands', [
-                ...content.brands,
-                {
-                  id: createId(),
-                  name: 'New brand',
-                  logo: '/assets/chemical/gattefosse.png',
-                  description: 'Brand description…',
-                  highlight: 'Highlighted product range…',
-                },
-              ])
-            }
+            onClick={() => openAddModal('brand')}
           >
             + Add brand
           </button>
@@ -241,6 +291,61 @@ export const ChemicalEditorPanel = ({ initialContent }: ChemicalEditorPanelProps
       >
         {saving ? 'Saving…' : 'Save chemical page'}
       </button>
+
+      <EditorItemModal
+        open={addModal === 'slide'}
+        subtitle="Hero slideshow"
+        title="Add hero slide"
+        submitLabel="Add slide"
+        onClose={closeAddModal}
+        onSubmit={handleAddSubmit}
+      >
+        <ImageField
+          label="Slide image"
+          value={slideForm.image}
+          folder="chemical"
+          onChange={(value) => setSlideForm({ image: value })}
+        />
+      </EditorItemModal>
+
+      <EditorItemModal
+        open={addModal === 'brand'}
+        subtitle="Brands"
+        title="Add brand"
+        submitLabel="Add brand"
+        onClose={closeAddModal}
+        onSubmit={handleAddSubmit}
+      >
+        <TextField
+          label="Brand name"
+          value={brandForm.name}
+          onChange={(value) => setBrandForm((current) => ({ ...current, name: value }))}
+        />
+        <ImageField
+          label="Brand logo"
+          value={brandForm.logo}
+          folder="chemical"
+          onChange={(value) => setBrandForm((current) => ({ ...current, logo: value }))}
+        />
+        <TextField
+          label="Description"
+          multiline
+          rows={4}
+          value={brandForm.description}
+          onChange={(value) =>
+            setBrandForm((current) => ({ ...current, description: value }))
+          }
+        />
+        <TextField
+          label="Highlight text"
+          multiline
+          rows={3}
+          value={brandForm.highlight}
+          onChange={(value) =>
+            setBrandForm((current) => ({ ...current, highlight: value }))
+          }
+        />
+      </EditorItemModal>
     </div>
   )
 }
