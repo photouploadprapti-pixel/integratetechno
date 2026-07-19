@@ -7,7 +7,7 @@ export type CashBookExpenseCategory =
   | 'Car maintainance'
   | 'Convence'
   | 'Fuel cost'
-  | 'Food (Bazar)'
+  | 'Office Expense'
   | 'Outside Food'
   | 'House Rent'
   | 'Internet'
@@ -18,6 +18,9 @@ export type CashBookExpenseCategory =
   | 'Visitor Expense'
   | 'Tech Expenses'
   | 'Local Transportation'
+  | 'Electricity'
+  | 'Mobile allowance'
+  | 'Vat & Tax'
 
 /** Cash book record stored in public.cash_book. */
 export interface CashBookRecord {
@@ -40,4 +43,14 @@ export interface CashBookFormValues {
   details: string
   remarks: string
   expense_category: CashBookExpenseCategory | ''
+}
+
+/** Monthly cash allowance budget stored in public.monthly_cash_allowance. */
+export interface MonthlyCashAllowance {
+  id: string
+  year_month: string
+  amount: number
+  created_at?: string
+  updated_at?: string
+  created_by?: string | null
 }

@@ -3,14 +3,19 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { CashBookModal } from '@/components/admin/cash-book-modal'
+import { MonthlyCashAllowanceModal } from '@/components/admin/monthly-cash-allowance-modal'
 import { AdminTable, AdminTableFrame } from '@/components/admin/admin-table'
 import { cashBookColumns } from '@/data/admin'
+import { getUserRole } from '@/lib/auth/roles'
 import {
   CASH_BOOK_EXPENSE_CATEGORIES,
+  currentYearMonth,
   formatAmount,
   formatPaymentType,
+  formatYearMonthLabel,
   parseAmount,
   sumCashBookAmounts,
+  yearMonthToDbDate,
 } from '@/lib/cash-book'
 import { formatDisplayDate } from '@/lib/mom'
 import { createClient } from '@/lib/supabase/client'
@@ -22,7 +27,7 @@ import type {
 } from '@/types/cash-book'
 
 /**
- * Live Cash Book list with categories, multi-filters, marking, and totals.
+ * Live Cash Book list with categories, multi-filters, marking, budgets, and totals.
  */
 export const CashBookPanel = () => {
   const [records, setRecords] = useState<CashBookRecord[]>([])
@@ -31,8 +36,12 @@ export const CashBookPanel = () => {
     [],
   )
   const [markedIds, setMarkedIds] = useState<Set<string>>(new Set())
+  const [budgetMonth, setBudgetMonth] = useState(currentYearMonth())
+  const [budgetAmount, setBudgetAmount] = useState<number | null>(null)
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
+  const [allowanceOpen, setAllowanceOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
   const [editingRecord, setEditingRecord] = useState<CashBookRecord | null>(null)
   const [saving, setSaving] = useState(false)
@@ -40,11 +49,16 @@ export const CashBookPanel = () => {
   const [listError, setListError] = useState('')
 
   /**
-   * Loads cash book records from Supabase newest-first.
+   * Loads cash book records and detects super_admin role.
    */
   const loadRecords = useCallback(async () => {
     setListError('')
     const supabase = createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    setIsSuperAdmin(getUserRole(user) === 'super_admin')
+
     const { data, error: fetchError } = await supabase
       .from('cash_book')
       .select('*')
@@ -61,9 +75,45 @@ export const CashBookPanel = () => {
     setLoading(false)
   }, [])
 
+  /**
+   * Loads monthly cash allowance for the selected budget month.
+   */
+  const loadBudget = useCallback(async () => {
+    const dbDate = yearMonthToDbDate(budgetMonth)
+    if (!dbDate) {
+      setBudgetAmount(null)
+      return
+    }
+
+    const supabase = createClient()
+    const { data, error: fetchError } = await supabase
+      .from('monthly_cash_allowance')
+      .select('amount')
+      .eq('year_month', dbDate)
+      .maybeSingle()
+
+    if (fetchError) {
+      setListError(fetchError.message)
+      setBudgetAmount(null)
+      return
+    }
+
+    if (!data) {
+      setBudgetAmount(null)
+      return
+    }
+
+    const amount = typeof data.amount === 'number' ? data.amount : Number(data.amount)
+    setBudgetAmount(Number.isFinite(amount) ? amount : null)
+  }, [budgetMonth])
+
   useEffect(() => {
     void loadRecords()
   }, [loadRecords])
+
+  useEffect(() => {
+    void loadBudget()
+  }, [loadBudget])
 
   const filteredRecords = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -93,9 +143,11 @@ export const CashBookPanel = () => {
   )
 
   const hasMarks = markedVisibleRecords.length > 0
-  const totalAmount = hasMarks
+  const totalExpense = hasMarks
     ? sumCashBookAmounts(markedVisibleRecords)
     : sumCashBookAmounts(filteredRecords)
+  const remaining =
+    budgetAmount === null ? null : budgetAmount - totalExpense
 
   /**
    * Toggles a category filter chip.
@@ -289,13 +341,24 @@ export const CashBookPanel = () => {
           <h1 className="font-[family-name:var(--font-righteous)] text-lg text-[#1a1a1a] sm:text-xl">
             Cash Book:
           </h1>
-          <button
-            type="button"
-            onClick={openCreate}
-            className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#0c29ab] px-5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(12,41,171,0.25)] transition-opacity hover:opacity-90"
-          >
-            Add Data
-          </button>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            {isSuperAdmin ? (
+              <button
+                type="button"
+                onClick={() => setAllowanceOpen(true)}
+                className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#0c29ab] bg-white px-5 text-sm font-semibold text-[#0c29ab] transition-colors hover:bg-[#eef2ff]"
+              >
+                Monthly Cash Allowance
+              </button>
+            ) : null}
+            <button
+              type="button"
+              onClick={openCreate}
+              className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#0c29ab] px-5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(12,41,171,0.25)] transition-opacity hover:opacity-90"
+            >
+              Add Data
+            </button>
+          </div>
         </div>
 
         {listError ? (
@@ -407,15 +470,57 @@ export const CashBookPanel = () => {
           </AdminTable>
         </AdminTableFrame>
 
-        <div className="mt-4 flex flex-col gap-1 rounded-2xl border border-[#dbe2f0] bg-[#f8faff] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-[#4a5568]">
-            {hasMarks
-              ? `Marked total (${markedVisibleRecords.length} item${markedVisibleRecords.length === 1 ? '' : 's'})`
-              : `Filtered total (${filteredRecords.length} item${filteredRecords.length === 1 ? '' : 's'})`}
-          </p>
-          <p className="font-[family-name:var(--font-righteous)] text-lg text-[#0c29ab]">
-            {formatAmount(totalAmount)}
-          </p>
+        <div className="mt-4 space-y-3 rounded-2xl border border-[#dbe2f0] bg-[#f8faff] px-4 py-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <label className="flex flex-col gap-1.5 text-sm font-semibold text-[#1a2a4a] sm:flex-row sm:items-center sm:gap-3">
+              Budget month
+              <input
+                type="month"
+                value={budgetMonth}
+                onChange={(event) => setBudgetMonth(event.target.value)}
+                className="min-h-10 rounded-xl border border-[#dbe2f0] bg-white px-3 text-sm font-normal text-[#1a1a1a] outline-none focus:border-[#0c29ab]"
+              />
+            </label>
+            <p className="text-sm text-[#4a5568]">
+              {formatYearMonthLabel(budgetMonth)}
+            </p>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-xl bg-white px-3 py-3 ring-1 ring-[#e6ebf5]">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#7a8699]">
+                Budget Amount
+              </p>
+              <p className="mt-1 font-[family-name:var(--font-righteous)] text-lg text-[#0c29ab]">
+                {budgetAmount === null ? '—' : formatAmount(budgetAmount)}
+              </p>
+            </div>
+            <div className="rounded-xl bg-white px-3 py-3 ring-1 ring-[#e6ebf5]">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#7a8699]">
+                {hasMarks ? 'Marked Expense Total' : 'Filtered Expense Total'}
+              </p>
+              <p className="mt-1 font-[family-name:var(--font-righteous)] text-lg text-[#1a1a1a]">
+                {formatAmount(totalExpense)}
+              </p>
+            </div>
+            <div className="rounded-xl bg-white px-3 py-3 ring-1 ring-[#e6ebf5]">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#7a8699]">
+                Amount Left
+              </p>
+              <p
+                className={cn(
+                  'mt-1 font-[family-name:var(--font-righteous)] text-lg',
+                  remaining === null
+                    ? 'text-[#7a8699]'
+                    : remaining < 0
+                      ? 'text-[#ef2f15]'
+                      : 'text-[#1f9d55]',
+                )}
+              >
+                {remaining === null ? '—' : formatAmount(remaining)}
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -427,6 +532,16 @@ export const CashBookPanel = () => {
         error={error}
         onClose={closeModal}
         onSubmit={handleSubmit}
+      />
+
+      <MonthlyCashAllowanceModal
+        open={allowanceOpen}
+        initialMonth={budgetMonth}
+        onClose={() => setAllowanceOpen(false)}
+        onSaved={(yearMonth, amount) => {
+          setBudgetMonth(yearMonth)
+          setBudgetAmount(amount)
+        }}
       />
     </>
   )

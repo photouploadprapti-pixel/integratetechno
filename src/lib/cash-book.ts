@@ -12,7 +12,7 @@ export const CASH_BOOK_EXPENSE_CATEGORIES: CashBookExpenseCategory[] = [
   'Car maintainance',
   'Convence',
   'Fuel cost',
-  'Food (Bazar)',
+  'Office Expense',
   'Outside Food',
   'House Rent',
   'Internet',
@@ -23,6 +23,9 @@ export const CASH_BOOK_EXPENSE_CATEGORIES: CashBookExpenseCategory[] = [
   'Visitor Expense',
   'Tech Expenses',
   'Local Transportation',
+  'Electricity',
+  'Mobile allowance',
+  'Vat & Tax',
 ]
 
 /**
@@ -34,6 +37,31 @@ const todayInputValue = () => {
   const month = String(now.getMonth() + 1).padStart(2, '0')
   const day = String(now.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
+}
+
+/**
+ * Returns current YYYY-MM for month inputs.
+ */
+export const currentYearMonth = () => todayInputValue().slice(0, 7)
+
+/**
+ * Converts YYYY-MM to the first-of-month date string used in DB.
+ * @param yearMonth - Month input value
+ */
+export const yearMonthToDbDate = (yearMonth: string) => {
+  if (!/^\d{4}-\d{2}$/.test(yearMonth)) return null
+  return `${yearMonth}-01`
+}
+
+/**
+ * Formats a YYYY-MM value for display (e.g. July 2026).
+ * @param yearMonth - Month input value
+ */
+export const formatYearMonthLabel = (yearMonth: string) => {
+  if (!/^\d{4}-\d{2}$/.test(yearMonth)) return yearMonth
+  const date = new Date(`${yearMonth}-01T00:00:00`)
+  if (Number.isNaN(date.getTime())) return yearMonth
+  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
 }
 
 /** Empty Cash Book form defaults. */
