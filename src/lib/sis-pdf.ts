@@ -13,8 +13,8 @@ import type { SisReport, SisServiceType } from '@/types/sis'
 const PAGE_W = 210
 const PAGE_H = 297
 const MARGIN = 12
-/** Signature footer block height. */
-const FOOTER_H = 52
+/** Signature footer block height (tall enough for a manual seal). */
+const FOOTER_H = 72
 /** Line gap within a wrapped field. */
 const LINE_GAP = 4.6
 /** Extra gap inserted between colon-separated fields. */
@@ -374,8 +374,10 @@ export const downloadSisReportPdf = async (
   doc.setFontSize(9)
   const leftPadX = MARGIN + 3
   const midPadX = MARGIN + colW + 3
-  const rowGap = 7
   const valueTopY = footerY + 12
+  const designationY = valueTopY + 7
+  const signatureY = designationY + 8
+  const dateY = footerY + FOOTER_H - 5
 
   doc.setFont('helvetica', 'bold')
   doc.text('Integrate Techno Trade:', midPadX, footerY + 5)
@@ -384,14 +386,14 @@ export const downloadSisReportPdf = async (
   doc.text('Name:', leftPadX, valueTopY)
   doc.text(signerName, midPadX, valueTopY)
 
-  doc.text('Designation:', leftPadX, valueTopY + rowGap)
-  doc.text(signerDesignation, midPadX, valueTopY + rowGap)
+  doc.text('Designation:', leftPadX, designationY)
+  doc.text(signerDesignation, midPadX, designationY)
 
-  doc.text('Signature:', leftPadX, valueTopY + rowGap * 2)
-  // Signature value left blank for manual seal/signature.
+  doc.text('Signature:', leftPadX, signatureY)
+  // Wide blank band under Signature for manual seal + signature.
 
-  doc.text('Date:', leftPadX, footerY + FOOTER_H - 5)
-  doc.text(footerDate, midPadX, footerY + FOOTER_H - 5)
+  doc.text('Date:', leftPadX, dateY)
+  doc.text(footerDate, midPadX, dateY)
 
   // Right column: customer signature area.
   doc.setFont('helvetica', 'bold')
