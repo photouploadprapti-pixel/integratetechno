@@ -119,6 +119,10 @@ export const officeAddress = [
 /** Public Google Maps share link for the office location. */
 export const officeMapUrl = 'https://maps.app.goo.gl/vzFxUagT9guoUKYP7'
 
-/** Embeddable Google Maps iframe for the footer (Integrate Techno Trade-ITT). */
+/**
+ * Interactive Google Maps embed for Integrate Techno Trade-ITT.
+ * Uses the official /maps/embed place format so the office name shows
+ * and visitors can pan / zoom inside the iframe.
+ */
 export const officeMapEmbedUrl =
-  'https://www.google.com/maps?q=23.8741233,90.3928565&z=16&output=embed'
+  'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3648.892447!2d90.3902816!3d23.8741282!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3755c551c98dbbdd%3A0xbe59db364f22065a!2sINTEGRATE%20TECHNO%20TRADE-ITT!5e0!3m2!1sen!2sbd!4v1721890712000!5m2!1sen!2sbd'

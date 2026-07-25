@@ -1,5 +1,6 @@
 import Image from 'next/image'
 
+import { officeMapEmbedUrl as defaultOfficeMapEmbedUrl } from '@/data/landing'
 import type { LandingContent } from '@/types/cms'
 
 type SiteFooterProps = {
@@ -16,10 +17,26 @@ type SiteFooterProps = {
 }
 
 /**
- * Site footer with logo left, office Google Map center, and Call Us / address right.
+ * Picks an interactive Maps embed URL, upgrading legacy static embeds.
+ * @param embedUrl - CMS or default embed URL
+ */
+const resolveMapEmbedUrl = (embedUrl: string) => {
+  const value = embedUrl?.trim()
+  if (!value) return defaultOfficeMapEmbedUrl
+  // Legacy coordinate-only embeds are mostly static and omit the place name.
+  if (value.includes('output=embed') && !value.includes('/maps/embed?')) {
+    return defaultOfficeMapEmbedUrl
+  }
+  return value
+}
+
+/**
+ * Site footer with logo left, interactive office Google Map center, and Call Us / address right.
  * @param content - CMS-driven footer fields
  */
 export const SiteFooter = ({ content }: SiteFooterProps) => {
+  const mapEmbedUrl = resolveMapEmbedUrl(content.officeMapEmbedUrl)
+
   return (
     <footer className="w-full border-t border-[#e6e6e6] bg-[#f7f7f7] px-4 py-10 md:px-6 md:py-12 lg:px-10">
       <div className="mx-auto grid w-full max-w-6xl gap-8 md:grid-cols-3 md:items-start md:gap-6">
@@ -40,12 +57,13 @@ export const SiteFooter = ({ content }: SiteFooterProps) => {
           <p className="text-sm font-medium text-[#0c29ab]">Office Location</p>
           <div className="w-full max-w-md overflow-hidden rounded-[14px] border border-[#e0e0e0] bg-white shadow-sm">
             <iframe
-              title={`${content.brandName} office location`}
-              src={content.officeMapEmbedUrl}
+              title={`${content.brandName} office location — INTEGRATE TECHNO TRADE-ITT`}
+              src={mapEmbedUrl}
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
               allowFullScreen
-              className="h-44 w-full border-0 md:h-48"
+              allow="fullscreen; clipboard-write"
+              className="pointer-events-auto h-56 w-full border-0 sm:h-60 md:h-64"
             />
           </div>
           <a
