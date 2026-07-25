@@ -35,7 +35,10 @@ export const HeroCarousel = ({ content }: HeroCarouselProps) => {
   }
 
   return (
-    <section id="home" className="relative isolate min-h-[min(100svh,720px)] overflow-hidden md:min-h-[80vh]">
+    <section
+      id="home"
+      className="group relative isolate min-h-[min(100svh,720px)] overflow-hidden md:min-h-[80vh]"
+    >
       {slides.map((slide, index) => (
         <Image
           key={slide.id}
@@ -51,30 +54,31 @@ export const HeroCarousel = ({ content }: HeroCarouselProps) => {
           sizes="100vw"
         />
       ))}
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.45)_0%,rgba(0,0,0,0.35)_40%,rgba(255,255,255,0.75)_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.45)_0%,rgba(0,0,0,0.35)_40%,rgba(255,255,255,0.75)_100%)] transition-opacity duration-300 group-hover:opacity-0" />
 
       <div className="relative mx-auto flex min-h-[min(100svh,720px)] max-w-6xl flex-col items-center justify-center px-4 py-16 text-center sm:py-20 md:min-h-[80vh] md:px-6 md:py-24">
-        <div className="mb-5 flex w-full max-w-xl flex-col items-center rounded-[24px] bg-white/92 px-4 py-5 shadow-[0_12px_40px_rgba(0,0,0,0.28)] backdrop-blur-md sm:rounded-[28px] sm:px-6 sm:py-7 md:mb-6 md:px-10 md:py-8">
+        <div className="mb-4 flex w-full max-w-[200px] flex-col items-center rounded-[18px] bg-white/92 px-3 py-3 shadow-[0_10px_28px_rgba(0,0,0,0.25)] backdrop-blur-md transition-all duration-300 group-hover:pointer-events-none group-hover:scale-95 group-hover:opacity-0 sm:mb-5 sm:max-w-[240px] sm:rounded-[20px] sm:px-4 sm:py-4 md:max-w-[260px]">
           <Image
             src={content.logoUrl}
             alt={content.brandName}
-            width={120}
-            height={120}
-            className="mb-3 h-16 w-16 rounded-full shadow-md sm:mb-4 sm:h-24 sm:w-24 md:h-28 md:w-28"
+            width={96}
+            height={96}
+            className="mb-2 h-12 w-12 rounded-full shadow-md sm:mb-2.5 sm:h-14 sm:w-14 md:h-16 md:w-16"
           />
           <Image
             src={content.wordmarkUrl}
             alt={content.brandName}
-            width={560}
-            height={70}
-            className="h-auto w-full max-w-[240px] sm:max-w-md md:max-w-lg"
+            width={320}
+            height={40}
+            className="h-auto w-full max-w-[140px] sm:max-w-[170px] md:max-w-[190px]"
           />
         </div>
-        <p className="max-w-xl px-2 text-sm font-medium text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.65)] sm:text-base md:text-lg">
+        <p className="max-w-xl px-2 text-sm font-medium text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.65)] transition-opacity duration-300 group-hover:opacity-0 sm:text-base md:text-lg">
           {slides[active]?.label}
         </p>
 
         <div className="mt-8 flex items-center gap-3 sm:mt-10" aria-label="Slide indicators">
+
           {slides.map((slide, index) => (
             <button
               key={slide.id}
