@@ -7,6 +7,7 @@ import type { ContactFormValues } from '@/types/landing'
 
 const initialValues: ContactFormValues = {
   name: '',
+  companyName: '',
   email: '',
   subject: '',
   body: '',
@@ -24,9 +25,9 @@ type ContactFormProps = {
 }
 
 /**
- * Shared Contact Us form (Name, Email, Subject, Body) used on the landing page and modals.
+ * Shared Contact Us form (Name, Company Name, Email, Subject, Body).
  * @param contactEmail - Mailto destination
- * @param onSuccess - Optional callback after submit
+ * @param onSuccess - Optional callback after submit (invoked before mailto)
  * @param className - Optional wrapper class
  * @param submitLabel - Idle submit button text
  */
@@ -40,17 +41,32 @@ export const ContactForm = ({
   const [sent, setSent] = useState(false)
 
   /**
-   * Opens the user's mail client with the form contents, then invokes onSuccess.
+   * Invokes onSuccess first (so brochure popups stay in the user gesture),
+   * then opens the user's mail client with the form contents.
    * @param event - Submit event from the contact form
    */
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+
+    // Keep brochure / download openers inside the same click gesture.
+    onSuccess?.(values)
+
     const mailto = new URL(`mailto:${contactEmail}`)
     mailto.searchParams.set('subject', values.subject || 'Website inquiry')
     mailto.searchParams.set(
       'body',
-      `${values.body}\n\nFrom:\n${values.name}\n${values.email}`,
+      [
+        values.body,
+        '',
+        'From:',
+        values.name,
+        values.companyName ? `Company: ${values.companyName}` : '',
+        values.email,
+      ]
+        .filter((line) => line !== '')
+        .join('\n'),
     )
+
     const mailLink = document.createElement('a')
     mailLink.href = mailto.toString()
     mailLink.rel = 'noopener noreferrer'
@@ -58,7 +74,6 @@ export const ContactForm = ({
     mailLink.click()
     mailLink.remove()
     setSent(true)
-    onSuccess?.(values)
   }
 
   return (
@@ -71,6 +86,20 @@ export const ContactForm = ({
           placeholder="Enter Your Name.."
           value={values.name}
           onChange={(event) => setValues({ ...values, name: event.target.value })}
+          className="min-h-12 rounded-[10px] border-2 border-[#e6e6e6] px-3 text-base outline-none transition-colors focus:border-[#0c29ab]"
+        />
+      </label>
+
+      <label className="flex flex-col gap-1.5 text-sm font-light text-[#1a1a1a]">
+        Company Name:
+        <input
+          required
+          type="text"
+          placeholder="Enter Your Company Name.."
+          value={values.companyName}
+          onChange={(event) =>
+            setValues({ ...values, companyName: event.target.value })
+          }
           className="min-h-12 rounded-[10px] border-2 border-[#e6e6e6] px-3 text-base outline-none transition-colors focus:border-[#0c29ab]"
         />
       </label>

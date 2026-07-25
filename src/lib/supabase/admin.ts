@@ -1,10 +1,14 @@
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { createClient as createSupabaseClient, type SupabaseClient } from '@supabase/supabase-js'
+
+let serviceClient: SupabaseClient | null = null
 
 /**
- * Creates a service-role Supabase client for trusted server-only operations.
+ * Creates (or reuses) a service-role Supabase client for trusted server-only operations.
  * Never import this into Client Components.
  */
 export const createServiceClient = () => {
+  if (serviceClient) return serviceClient
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
@@ -12,10 +16,12 @@ export const createServiceClient = () => {
     throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
   }
 
-  return createSupabaseClient(url, serviceRoleKey, {
+  serviceClient = createSupabaseClient(url, serviceRoleKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
     },
   })
+
+  return serviceClient
 }

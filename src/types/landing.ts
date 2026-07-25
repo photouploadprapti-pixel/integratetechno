@@ -22,6 +22,7 @@ export interface ClientItem {
 /** Payload for the contact form. */
 export interface ContactFormValues {
   name: string
+  companyName: string
   email: string
   subject: string
   body: string

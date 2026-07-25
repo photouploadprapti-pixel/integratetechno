@@ -1,28 +1,32 @@
-import { createClient } from '@/lib/supabase/client'
-
 /**
- * Uploads an image file to the CMS media bucket and returns its public URL.
+ * Uploads an image file via the authenticated CMS upload API and returns its public URL.
+ * Uses a server route with the service role so Storage RLS does not exhaust DB connections.
  * @param file - Image file selected by the editor
  * @param folder - Optional folder prefix inside the bucket
  */
 export const uploadCmsImage = async (file: File, folder = 'uploads') => {
-  const supabase = createClient()
-  const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg'
-  const safeName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${extension}`
-  const path = `${folder}/${safeName}`
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('folder', folder)
 
-  const { error } = await supabase.storage.from('cms-media').upload(path, file, {
-    cacheControl: '3600',
-    upsert: false,
-    contentType: file.type || 'image/jpeg',
+  const response = await fetch('/api/cms/upload', {
+    method: 'POST',
+    body: formData,
   })
 
-  if (error) {
-    throw new Error(error.message)
+  const payload = (await response.json().catch(() => null)) as
+    | { url?: string; error?: string }
+    | null
+
+  if (!response.ok) {
+    throw new Error(payload?.error || 'Upload failed')
   }
 
-  const { data } = supabase.storage.from('cms-media').getPublicUrl(path)
-  return data.publicUrl
+  if (!payload?.url) {
+    throw new Error('Upload succeeded but no image URL was returned')
+  }
+
+  return payload.url
 }
 
 /**
@@ -31,19 +35,17 @@ export const uploadCmsImage = async (file: File, folder = 'uploads') => {
  * @param data - Full content payload
  */
 export const saveSiteContent = async (key: 'landing' | 'chemical', data: unknown) => {
-  const supabase = createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const { error } = await supabase.from('site_content').upsert({
-    id: key,
-    data,
-    updated_at: new Date().toISOString(),
-    updated_by: user?.id ?? null,
+  const response = await fetch('/api/cms/save', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key, data }),
   })
 
-  if (error) {
-    throw new Error(error.message)
+  const payload = (await response.json().catch(() => null)) as
+    | { error?: string }
+    | null
+
+  if (!response.ok) {
+    throw new Error(payload?.error || 'Failed to save content')
   }
 }

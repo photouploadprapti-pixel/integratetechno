@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { CashBookModal } from '@/components/admin/cash-book-modal'
+import { DateRangeFilter } from '@/components/admin/date-range-filter'
 import { MonthlyCashAllowanceModal } from '@/components/admin/monthly-cash-allowance-modal'
 import { AdminTable, AdminTableFrame } from '@/components/admin/admin-table'
 import { cashBookColumns } from '@/data/admin'
@@ -17,6 +18,7 @@ import {
   sumCashBookAmounts,
   yearMonthToDbDate,
 } from '@/lib/cash-book'
+import { emptyDateFilter, matchesDateFilter } from '@/lib/date-filter'
 import { formatDisplayDate } from '@/lib/mom'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
@@ -32,6 +34,7 @@ import type {
 export const CashBookPanel = () => {
   const [records, setRecords] = useState<CashBookRecord[]>([])
   const [query, setQuery] = useState('')
+  const [dateFilter, setDateFilter] = useState(emptyDateFilter)
   const [selectedCategories, setSelectedCategories] = useState<CashBookExpenseCategory[]>(
     [],
   )
@@ -118,6 +121,7 @@ export const CashBookPanel = () => {
   const filteredRecords = useMemo(() => {
     const q = query.trim().toLowerCase()
     return records.filter((record) => {
+      if (!matchesDateFilter(record.date, dateFilter)) return false
       if (
         selectedCategories.length > 0 &&
         (!record.expense_category || !selectedCategories.includes(record.expense_category))
@@ -135,7 +139,7 @@ export const CashBookPanel = () => {
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(q))
     })
-  }, [query, records, selectedCategories])
+  }, [dateFilter, query, records, selectedCategories])
 
   const markedVisibleRecords = useMemo(
     () => filteredRecords.filter((record) => markedIds.has(record.id)),
@@ -337,27 +341,30 @@ export const CashBookPanel = () => {
           </div>
         </div>
 
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <h1 className="font-[family-name:var(--font-righteous)] text-lg text-[#1a1a1a] sm:text-xl">
             Cash Book:
           </h1>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            {isSuperAdmin ? (
+          <div className="flex flex-col items-stretch gap-3 sm:items-end">
+            <DateRangeFilter value={dateFilter} onChange={setDateFilter} />
+            <div className="flex flex-col gap-2 sm:flex-row">
+              {isSuperAdmin ? (
+                <button
+                  type="button"
+                  onClick={() => setAllowanceOpen(true)}
+                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#0c29ab] bg-white px-5 text-sm font-semibold text-[#0c29ab] transition-colors hover:bg-[#eef2ff]"
+                >
+                  Monthly Cash Allowance
+                </button>
+              ) : null}
               <button
                 type="button"
-                onClick={() => setAllowanceOpen(true)}
-                className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#0c29ab] bg-white px-5 text-sm font-semibold text-[#0c29ab] transition-colors hover:bg-[#eef2ff]"
+                onClick={openCreate}
+                className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#0c29ab] px-5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(12,41,171,0.25)] transition-opacity hover:opacity-90"
               >
-                Monthly Cash Allowance
+                Add Data
               </button>
-            ) : null}
-            <button
-              type="button"
-              onClick={openCreate}
-              className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#0c29ab] px-5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(12,41,171,0.25)] transition-opacity hover:opacity-90"
-            >
-              Add Data
-            </button>
+            </div>
           </div>
         </div>
 

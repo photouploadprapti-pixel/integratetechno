@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { useEffect, useId, useState } from 'react'
 
 import { ContactForm } from '@/components/contact-form'
+import { brochureUrl as defaultBrochureUrl } from '@/data/landing'
 import type { LandingContent } from '@/types/cms'
 
 type ServicesSectionProps = {
@@ -49,10 +50,20 @@ export const ServicesSection = ({ content }: ServicesSectionProps) => {
   }, [isContactOpen])
 
   /**
-   * Opens the brochure after the visitor submits the contact form.
+   * Opens the brochure Drive link after the visitor submits the contact form.
+   * Uses an anchor click so browsers do not treat it as a blocked popup.
    */
   const handleContactSuccess = () => {
-    window.open(content.brochureUrl, '_blank', 'noopener,noreferrer')
+    const url = (content.brochureUrl || defaultBrochureUrl).trim()
+    if (url) {
+      const link = document.createElement('a')
+      link.href = url
+      link.target = '_blank'
+      link.rel = 'noopener noreferrer'
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+    }
     setIsContactOpen(false)
   }
 

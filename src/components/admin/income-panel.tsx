@@ -2,9 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
+import { DateRangeFilter } from '@/components/admin/date-range-filter'
 import { IncomeModal } from '@/components/admin/income-modal'
 import { AdminTable, AdminTableFrame } from '@/components/admin/admin-table'
 import { incomeColumns } from '@/data/admin'
+import { emptyDateFilter, matchesDateFilter } from '@/lib/date-filter'
 import { formatMoney, parseIncomeNumber } from '@/lib/income'
 import { formatDisplayDate } from '@/lib/mom'
 import { formatBankName } from '@/lib/options'
@@ -18,6 +20,7 @@ import type { IncomeFormValues, IncomeRecord } from '@/types/income'
 export const IncomePanel = () => {
   const [records, setRecords] = useState<IncomeRecord[]>([])
   const [query, setQuery] = useState('')
+  const [dateFilter, setDateFilter] = useState(emptyDateFilter)
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
@@ -54,9 +57,10 @@ export const IncomePanel = () => {
 
   const filteredRecords = useMemo(() => {
     const q = query.trim().toLowerCase()
-    if (!q) return records
-    return records.filter((record) =>
-      [
+    return records.filter((record) => {
+      if (!matchesDateFilter(record.date, dateFilter)) return false
+      if (!q) return true
+      return [
         record.lc_no,
         record.customer,
         record.manufacturer,
@@ -65,9 +69,9 @@ export const IncomePanel = () => {
         record.commission !== null ? String(record.commission) : '',
       ]
         .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(q)),
-    )
-  }, [query, records])
+        .some((value) => String(value).toLowerCase().includes(q))
+    })
+  }, [dateFilter, query, records])
 
   /**
    * Opens the modal in create mode.
@@ -197,17 +201,20 @@ export const IncomePanel = () => {
           />
         </div>
 
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <h1 className="font-[family-name:var(--font-righteous)] text-lg text-[#1a1a1a] sm:text-xl">
             L.C./Income per Annum:
           </h1>
-          <button
-            type="button"
-            onClick={openCreate}
-            className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#0c29ab] px-5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(12,41,171,0.25)] transition-opacity hover:opacity-90"
-          >
-            Add Data
-          </button>
+          <div className="flex flex-col items-stretch gap-3 sm:items-end">
+            <DateRangeFilter value={dateFilter} onChange={setDateFilter} />
+            <button
+              type="button"
+              onClick={openCreate}
+              className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#0c29ab] px-5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(12,41,171,0.25)] transition-opacity hover:opacity-90"
+            >
+              Add Data
+            </button>
+          </div>
         </div>
 
         {listError ? (

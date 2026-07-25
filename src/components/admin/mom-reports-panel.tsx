@@ -2,9 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
+import { DateRangeFilter } from '@/components/admin/date-range-filter'
 import { MomReportModal } from '@/components/admin/mom-report-modal'
 import { AdminTable, AdminTableFrame } from '@/components/admin/admin-table'
 import { momColumns } from '@/data/admin'
+import { emptyDateFilter, matchesDateFilter } from '@/lib/date-filter'
 import { formatDisplayDate } from '@/lib/mom'
 import { downloadMomReportPdf } from '@/lib/mom-pdf'
 import { createClient } from '@/lib/supabase/client'
@@ -17,6 +19,7 @@ import type { MomReport, MomReportFormValues } from '@/types/mom'
 export const MomReportsPanel = () => {
   const [reports, setReports] = useState<MomReport[]>([])
   const [query, setQuery] = useState('')
+  const [dateFilter, setDateFilter] = useState(emptyDateFilter)
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
@@ -54,9 +57,12 @@ export const MomReportsPanel = () => {
 
   const filteredReports = useMemo(() => {
     const q = query.trim().toLowerCase()
-    if (!q) return reports
-    return reports.filter((report) =>
-      [
+    return reports.filter((report) => {
+      if (!matchesDateFilter(report.mom_date || report.starting_date, dateFilter)) {
+        return false
+      }
+      if (!q) return true
+      return [
         report.company_name,
         report.type_of_machine,
         report.type_of_visit,
@@ -65,9 +71,9 @@ export const MomReportsPanel = () => {
         report.machine_no,
       ]
         .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(q)),
-    )
-  }, [query, reports])
+        .some((value) => String(value).toLowerCase().includes(q))
+    })
+  }, [dateFilter, query, reports])
 
   /**
    * Opens the modal in create mode.
@@ -218,17 +224,20 @@ export const MomReportsPanel = () => {
           />
         </div>
 
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <h1 className="font-[family-name:var(--font-righteous)] text-lg text-[#1a1a1a] sm:text-xl">
             List of all MOM Reports:
           </h1>
-          <button
-            type="button"
-            onClick={openCreate}
-            className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#0c29ab] px-5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(12,41,171,0.25)] transition-opacity hover:opacity-90"
-          >
-            Create MOM Report
-          </button>
+          <div className="flex flex-col items-stretch gap-3 sm:items-end">
+            <DateRangeFilter value={dateFilter} onChange={setDateFilter} />
+            <button
+              type="button"
+              onClick={openCreate}
+              className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#0c29ab] px-5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(12,41,171,0.25)] transition-opacity hover:opacity-90"
+            >
+              Create MOM Report
+            </button>
+          </div>
         </div>
 
         {listError ? (

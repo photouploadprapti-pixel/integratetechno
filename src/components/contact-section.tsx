@@ -8,7 +8,7 @@ type ContactSectionProps = {
 }
 
 /**
- * Contact form section matching Bubble fields: Name, Email, Subject, Body.
+ * Contact form section matching Bubble fields: Name, Company Name, Email, Subject, Body.
  * @param content - CMS-driven contact title and destination email
  */
 export const ContactSection = ({ content }: ContactSectionProps) => {

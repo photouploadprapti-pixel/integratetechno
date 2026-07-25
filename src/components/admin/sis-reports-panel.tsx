@@ -2,9 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
+import { DateRangeFilter } from '@/components/admin/date-range-filter'
 import { SisReportModal } from '@/components/admin/sis-report-modal'
 import { AdminTable, AdminTableFrame } from '@/components/admin/admin-table'
 import { sisColumns } from '@/data/admin'
+import { emptyDateFilter, matchesDateFilter } from '@/lib/date-filter'
 import { formatDisplayDate } from '@/lib/mom'
 import { parseOptionalNumber, sisServiceTypesLabel } from '@/lib/sis'
 import { downloadSisReportPdf } from '@/lib/sis-pdf'
@@ -19,6 +21,7 @@ import type { SisReport, SisReportFormValues } from '@/types/sis'
 export const SisReportsPanel = () => {
   const [reports, setReports] = useState<SisReport[]>([])
   const [query, setQuery] = useState('')
+  const [dateFilter, setDateFilter] = useState(emptyDateFilter)
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
@@ -56,9 +59,10 @@ export const SisReportsPanel = () => {
 
   const filteredReports = useMemo(() => {
     const q = query.trim().toLowerCase()
-    if (!q) return reports
-    return reports.filter((report) =>
-      [
+    return reports.filter((report) => {
+      if (!matchesDateFilter(report.date_of_report, dateFilter)) return false
+      if (!q) return true
+      return [
         report.customer_name,
         report.machine_equipment_name,
         report.model_no,
@@ -69,9 +73,9 @@ export const SisReportsPanel = () => {
         sisServiceTypesLabel(report.service_type),
       ]
         .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(q)),
-    )
-  }, [query, reports])
+        .some((value) => String(value).toLowerCase().includes(q))
+    })
+  }, [dateFilter, query, reports])
 
   /**
    * Opens the modal in create mode.
@@ -258,17 +262,20 @@ export const SisReportsPanel = () => {
           />
         </div>
 
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <h1 className="font-[family-name:var(--font-righteous)] text-lg text-[#1a1a1a] sm:text-xl">
             List of all Service/Installation/Sales Reports:
           </h1>
-          <button
-            type="button"
-            onClick={openCreate}
-            className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#0c29ab] px-5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(12,41,171,0.25)] transition-opacity hover:opacity-90"
-          >
-            Create S/I/S Report
-          </button>
+          <div className="flex flex-col items-stretch gap-3 sm:items-end">
+            <DateRangeFilter value={dateFilter} onChange={setDateFilter} />
+            <button
+              type="button"
+              onClick={openCreate}
+              className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#0c29ab] px-5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(12,41,171,0.25)] transition-opacity hover:opacity-90"
+            >
+              Create S/I/S Report
+            </button>
+          </div>
         </div>
 
         {listError ? (
