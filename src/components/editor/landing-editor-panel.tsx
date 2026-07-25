@@ -136,7 +136,13 @@ export const LandingEditorPanel = ({ initialContent }: LandingEditorPanelProps) 
     setSaving(true)
     setMessage('')
     try {
-      await saveSiteContent('landing', content)
+      const payload = {
+        ...content,
+        // Trim address lines only on save so spaces work while typing.
+        officeAddress: content.officeAddress.map((line) => line.trimEnd()),
+      }
+      await saveSiteContent('landing', payload)
+      setContent(payload)
       setMessage('Landing page saved. Refresh the site to see changes.')
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Save failed')
@@ -521,12 +527,7 @@ export const LandingEditorPanel = ({ initialContent }: LandingEditorPanelProps) 
             multiline
             rows={4}
             value={content.officeAddress.join('\n')}
-            onChange={(value) =>
-              updateField(
-                'officeAddress',
-                value.split('\n').map((line) => line.trimEnd()),
-              )
-            }
+            onChange={(value) => updateField('officeAddress', value.split('\n'))}
           />
           <TextField
             label="Office Google Maps link"
