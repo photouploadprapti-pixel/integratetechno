@@ -115,3 +115,10 @@ export const officeAddress = [
   'Sector #13, Uttara,',
   'Dhaka-1230',
 ]
+
+/** Public Google Maps share link for the office location. */
+export const officeMapUrl = 'https://maps.app.goo.gl/vzFxUagT9guoUKYP7'
+
+/** Embeddable Google Maps iframe for the footer (Integrate Techno Trade-ITT). */
+export const officeMapEmbedUrl =
+  'https://www.google.com/maps?q=23.8741233,90.3928565&z=16&output=embed'

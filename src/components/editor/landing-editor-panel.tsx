@@ -528,6 +528,16 @@ export const LandingEditorPanel = ({ initialContent }: LandingEditorPanelProps) 
               )
             }
           />
+          <TextField
+            label="Office Google Maps link"
+            value={content.officeMapUrl}
+            onChange={(value) => updateField('officeMapUrl', value)}
+          />
+          <TextField
+            label="Office Google Maps embed URL"
+            value={content.officeMapEmbedUrl}
+            onChange={(value) => updateField('officeMapEmbedUrl', value)}
+          />
         </div>
       </section>
 

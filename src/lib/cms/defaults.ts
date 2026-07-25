@@ -7,6 +7,8 @@ import {
   heroSlides,
   navLinks,
   officeAddress,
+  officeMapEmbedUrl,
+  officeMapUrl,
   phoneNumber,
   services,
 } from '@/data/landing'
@@ -43,6 +45,8 @@ export const defaultLandingContent: LandingContent = {
   phoneNumber,
   officeAddress,
   callUsLabel: 'Call Us',
+  officeMapUrl,
+  officeMapEmbedUrl,
 }
 
 /** Default Chemical Division content (fallback when CMS has no row). */

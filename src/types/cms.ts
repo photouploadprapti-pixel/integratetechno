@@ -28,6 +28,10 @@ export type LandingContent = {
   phoneNumber: string
   officeAddress: string[]
   callUsLabel: string
+  /** Public Google Maps share link for the office. */
+  officeMapUrl: string
+  /** Embeddable Google Maps iframe src for the footer. */
+  officeMapEmbedUrl: string
 }
 
 /** Editable Chemical Division page content managed by CMS editors. */

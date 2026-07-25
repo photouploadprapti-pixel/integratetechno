@@ -5,19 +5,25 @@ import type { LandingContent } from '@/types/cms'
 type SiteFooterProps = {
   content: Pick<
     LandingContent,
-    'logoUrl' | 'brandName' | 'phoneNumber' | 'officeAddress' | 'callUsLabel'
+    | 'logoUrl'
+    | 'brandName'
+    | 'phoneNumber'
+    | 'officeAddress'
+    | 'callUsLabel'
+    | 'officeMapUrl'
+    | 'officeMapEmbedUrl'
   >
 }
 
 /**
- * Site footer with logo left and Call Us / address right.
+ * Site footer with logo left, office Google Map center, and Call Us / address right.
  * @param content - CMS-driven footer fields
  */
 export const SiteFooter = ({ content }: SiteFooterProps) => {
   return (
     <footer className="w-full border-t border-[#e6e6e6] bg-[#f7f7f7] px-4 py-10 md:px-6 md:py-12 lg:px-10">
-      <div className="flex w-full flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex shrink-0 flex-col items-center gap-3 text-center sm:items-start sm:text-left">
+      <div className="mx-auto grid w-full max-w-6xl gap-8 md:grid-cols-3 md:items-start md:gap-6">
+        <div className="flex shrink-0 flex-col items-center gap-3 text-center md:items-start md:text-left">
           <Image
             src={content.logoUrl}
             alt={content.brandName}
@@ -30,7 +36,29 @@ export const SiteFooter = ({ content }: SiteFooterProps) => {
           </p>
         </div>
 
-        <div className="flex flex-col items-center gap-2 text-center sm:items-end sm:text-right">
+        <div className="flex w-full flex-col items-center gap-2">
+          <p className="text-sm font-medium text-[#0c29ab]">Office Location</p>
+          <div className="w-full max-w-md overflow-hidden rounded-[14px] border border-[#e0e0e0] bg-white shadow-sm">
+            <iframe
+              title={`${content.brandName} office location`}
+              src={content.officeMapEmbedUrl}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
+              className="h-44 w-full border-0 md:h-48"
+            />
+          </div>
+          <a
+            href={content.officeMapUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-medium text-[#0c29ab] underline-offset-2 transition-opacity hover:opacity-80 hover:underline"
+          >
+            Open in Google Maps
+          </a>
+        </div>
+
+        <div className="flex flex-col items-center gap-2 text-center md:items-end md:text-right">
           <a
             href={`tel:${content.phoneNumber}`}
             className="mb-2 inline-flex min-h-11 items-center gap-2 transition-opacity hover:opacity-80"
