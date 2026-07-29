@@ -16,6 +16,10 @@ export const emptyMomFormValues = (): MomReportFormValues => ({
   installation_report: '',
   conclusion: '',
   note: '',
+  customer_remarks: '',
+  signer_name: '',
+  signer_designation: '',
+  signer_date: '',
 })
 
 /**
@@ -37,6 +41,10 @@ export const momReportToFormValues = (report: MomReport): MomReportFormValues =>
   installation_report: report.installation_report || '',
   conclusion: report.conclusion || '',
   note: report.note || '',
+  customer_remarks: report.customer_remarks || '',
+  signer_name: report.signer_name || '',
+  signer_designation: report.signer_designation || '',
+  signer_date: report.signer_date || '',
 })
 
 /**

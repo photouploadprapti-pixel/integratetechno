@@ -15,6 +15,14 @@ export interface MomReport {
   conclusion: string | null
   installation_report: string | null
   machine_warrenty: boolean
+  /** Customer Remarks shown above the PDF signature footer. */
+  customer_remarks: string | null
+  /** Integrate Techno Trade signer name on the PDF footer. */
+  signer_name: string | null
+  /** Integrate Techno Trade signer designation on the PDF footer. */
+  signer_designation: string | null
+  /** Date shown in the Integrate Techno Trade PDF footer column. */
+  signer_date: string | null
   created_at?: string
   updated_at?: string
 }
@@ -35,4 +43,8 @@ export interface MomReportFormValues {
   installation_report: string
   conclusion: string
   note: string
+  customer_remarks: string
+  signer_name: string
+  signer_designation: string
+  signer_date: string
 }

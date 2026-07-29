@@ -25,6 +25,7 @@ export const MomReportsPanel = () => {
   const [modalOpen, setModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
   const [editingReport, setEditingReport] = useState<MomReport | null>(null)
+  const [createDefaults, setCreateDefaults] = useState<Partial<MomReportFormValues>>({})
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [listError, setListError] = useState('')
@@ -77,12 +78,25 @@ export const MomReportsPanel = () => {
   }, [dateFilter, query, reports])
 
   /**
-   * Opens the modal in create mode.
+   * Opens the modal in create mode, prefilling signer fields from staff profile.
    */
-  const openCreate = () => {
+  const openCreate = async () => {
     setModalMode('create')
     setEditingReport(null)
     setError('')
+
+    const supabase = createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    const profile = getStaffProfileByEmail(user?.email)
+    const today = new Date().toISOString().slice(0, 10)
+    setCreateDefaults({
+      signer_name: profile?.name || '',
+      signer_designation: profile?.designation || '',
+      signer_date: today,
+      mom_date: today,
+    })
     setModalOpen(true)
   }
 
@@ -135,6 +149,10 @@ export const MomReportsPanel = () => {
       installation_report: values.installation_report.trim() || null,
       conclusion: values.conclusion.trim() || null,
       note: values.note.trim() || null,
+      customer_remarks: values.customer_remarks.trim() || null,
+      signer_name: values.signer_name.trim() || null,
+      signer_designation: values.signer_designation.trim() || null,
+      signer_date: values.signer_date || null,
     }
 
     if (modalMode === 'edit' && editingReport) {
@@ -192,7 +210,7 @@ export const MomReportsPanel = () => {
 
   /**
    * Generates and downloads a MOM Report PDF for one row.
-   * Autofills Name/Designation from the logged-in staff directory profile.
+   * Uses saved signature-block fields; falls back to staff profile when blank.
    * @param report - Report to print
    */
   const handlePrint = async (report: MomReport) => {
@@ -244,7 +262,7 @@ export const MomReportsPanel = () => {
             <DateRangeFilter value={dateFilter} onChange={setDateFilter} />
             <button
               type="button"
-              onClick={openCreate}
+              onClick={() => void openCreate()}
               className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#0c29ab] px-5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(12,41,171,0.25)] transition-opacity hover:opacity-90"
             >
               Create MOM Report
@@ -369,6 +387,7 @@ export const MomReportsPanel = () => {
         open={modalOpen}
         mode={modalMode}
         initialReport={editingReport}
+        createDefaults={createDefaults}
         saving={saving}
         error={error}
         onClose={closeModal}

@@ -15,6 +15,7 @@ import type { MomReport, MomReportFormValues } from '@/types/mom'
  * @param open - Whether the modal is visible
  * @param mode - create or edit
  * @param initialReport - Existing report when editing
+ * @param createDefaults - Prefill values for create mode (e.g. signer from staff profile)
  * @param saving - Submit in progress
  * @param error - Error message to display
  * @param onClose - Close handler
@@ -24,6 +25,7 @@ export const MomReportModal = ({
   open,
   mode,
   initialReport,
+  createDefaults,
   saving,
   error,
   onClose,
@@ -32,6 +34,7 @@ export const MomReportModal = ({
   open: boolean
   mode: 'create' | 'edit'
   initialReport: MomReport | null
+  createDefaults?: Partial<MomReportFormValues>
   saving: boolean
   error: string
   onClose: () => void
@@ -45,9 +48,9 @@ export const MomReportModal = ({
     setValues(
       mode === 'edit' && initialReport
         ? momReportToFormValues(initialReport)
-        : emptyMomFormValues(),
+        : { ...emptyMomFormValues(), ...createDefaults },
     )
-  }, [open, mode, initialReport])
+  }, [open, mode, initialReport, createDefaults])
 
   useEffect(() => {
     if (!open) return
@@ -275,6 +278,58 @@ export const MomReportModal = ({
                 className={cn(inputClassName, 'resize-y py-3')}
               />
             </Field>
+
+            <div className="sm:col-span-2 rounded-2xl border border-[#dbe2f0] bg-[#f8faff] p-4">
+              <p className="mb-1 text-sm font-semibold text-[#0c29ab]">
+                PDF signature block
+              </p>
+              <p className="mb-4 text-xs text-[#7a8699]">
+                These values appear in the Customer Remarks and Integrate Techno Trade
+                columns on the printed PDF. Signature stays blank for handwritten use.
+              </p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Customer Remarks" className="sm:col-span-2">
+                  <textarea
+                    rows={2}
+                    value={values.customer_remarks}
+                    onChange={(event) =>
+                      updateField('customer_remarks', event.target.value)
+                    }
+                    placeholder="e.g. No comments"
+                    className={cn(inputClassName, 'resize-y py-3')}
+                  />
+                </Field>
+
+                <Field label="Name">
+                  <input
+                    value={values.signer_name}
+                    onChange={(event) => updateField('signer_name', event.target.value)}
+                    placeholder="Integrate Techno Trade signer name"
+                    className={inputClassName}
+                  />
+                </Field>
+
+                <Field label="Designation">
+                  <input
+                    value={values.signer_designation}
+                    onChange={(event) =>
+                      updateField('signer_designation', event.target.value)
+                    }
+                    placeholder="e.g. Service Engineer"
+                    className={inputClassName}
+                  />
+                </Field>
+
+                <Field label="Date" className="sm:col-span-2">
+                  <input
+                    type="date"
+                    value={values.signer_date}
+                    onChange={(event) => updateField('signer_date', event.target.value)}
+                    className={inputClassName}
+                  />
+                </Field>
+              </div>
+            </div>
           </div>
 
           {error ? (

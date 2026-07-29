@@ -144,10 +144,11 @@ export const downloadMomReportPdf = async (
   // Customer Remarks row (same as S/I/S PDF footer stack).
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(9)
-  const remarks = 'Customer Remarks: '
-  const remarksH = 10
+  const remarksText = `Customer Remarks: ${report.customer_remarks?.trim() || ''}`
+  const remarksLines = doc.splitTextToSize(remarksText, tableW - 6) as string[]
+  const remarksH = Math.max(10, remarksLines.length * 4.4 + 4)
   strokeRect(doc, tableX, y, tableW, remarksH)
-  doc.text(remarks, tableX + 3, y + 5.2)
+  doc.text(remarksLines, tableX + 3, y + 5.2)
   y += remarksH
 
   // Place signature footer directly under remarks; page-break if needed.
@@ -162,9 +163,11 @@ export const downloadMomReportPdf = async (
   strokeRect(doc, MARGIN + colW, footerY, colW, FOOTER_H)
   strokeRect(doc, MARGIN + colW * 2, footerY, colW, FOOTER_H)
 
-  const signerName = signer?.name?.trim() || ''
-  const signerDesignation = signer?.designation?.trim() || ''
-  const footerDate = reportDate
+  const signerName = report.signer_name?.trim() || signer?.name?.trim() || ''
+  const signerDesignation =
+    report.signer_designation?.trim() || signer?.designation?.trim() || ''
+  const footerDate =
+    formatPdfDate(report.signer_date) || reportDate
 
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(9)
