@@ -13,13 +13,25 @@ import type { MomReport } from '@/types/mom'
 const PAGE_W = 210
 const PAGE_H = 297
 const MARGIN = 14
+/** Signature footer block height (tall enough for a manual seal). */
+const FOOTER_H = 72
+
+/** Optional signer details autofilled from the logged-in staff directory. */
+export interface MomPdfSigner {
+  name: string
+  designation: string
+}
 
 /**
  * Builds and downloads a MOM Report PDF matching the Bubble print layout.
- * Leaves blank space at the bottom for a manual company seal and signature.
+ * Ends with Customer Remarks + the same 3-column signature footer used on S/I/S PDFs.
  * @param report - MOM report record to render
+ * @param signer - Optional Name/Designation for the Integrate Techno Trade column
  */
-export const downloadMomReportPdf = async (report: MomReport) => {
+export const downloadMomReportPdf = async (
+  report: MomReport,
+  signer?: MomPdfSigner | null,
+) => {
   const [logoData, wordmarkData] = await Promise.all([
     loadImageDataUrl('/assets/logo.png'),
     loadImageDataUrl('/assets/wordmark.png'),
@@ -27,6 +39,7 @@ export const downloadMomReportPdf = async (report: MomReport) => {
 
   const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' })
   const contentW = PAGE_W - MARGIN * 2
+  const pageBottom = () => PAGE_H - MARGIN
   let y = drawReportHeader(doc, logoData, wordmarkData)
 
   const reportDate =
@@ -126,16 +139,60 @@ export const downloadMomReportPdf = async (report: MomReport) => {
   const bodyH = Math.max(42, bodyWrapped.length * 4.4 + 8)
   strokeRect(doc, tableX, y, tableW, bodyH)
   doc.text(bodyWrapped, tableX + 3, y + 6)
-  y += bodyH + 8
+  y += bodyH
 
-  // Reserve blank space at bottom-right for manual seal + signature.
-  const sealSize = 32
-  const stampX = PAGE_W - MARGIN - sealSize - 2
-  const stampY = Math.min(y, PAGE_H - 48)
+  // Customer Remarks row (same as S/I/S PDF footer stack).
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(9)
+  const remarks = 'Customer Remarks: '
+  const remarksH = 10
+  strokeRect(doc, tableX, y, tableW, remarksH)
+  doc.text(remarks, tableX + 3, y + 5.2)
+  y += remarksH
+
+  // Place signature footer directly under remarks; page-break if needed.
+  if (y + FOOTER_H > pageBottom()) {
+    doc.addPage()
+    y = drawReportHeader(doc, logoData, wordmarkData)
+  }
+
+  const footerY = y
+  const colW = contentW / 3
+  strokeRect(doc, MARGIN, footerY, colW, FOOTER_H)
+  strokeRect(doc, MARGIN + colW, footerY, colW, FOOTER_H)
+  strokeRect(doc, MARGIN + colW * 2, footerY, colW, FOOTER_H)
+
+  const signerName = signer?.name?.trim() || ''
+  const signerDesignation = signer?.designation?.trim() || ''
+  const footerDate = reportDate
 
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(10)
-  doc.text(reportDate, stampX + sealSize / 2, stampY + sealSize + 5, { align: 'center' })
+  doc.setFontSize(9)
+  const leftPadX = MARGIN + 3
+  const midPadX = MARGIN + colW + 3
+  const valueTopY = footerY + 12
+  const designationY = valueTopY + 7
+  const signatureY = designationY + 8
+  const dateY = footerY + FOOTER_H - 5
+
+  doc.setFont('helvetica', 'bold')
+  doc.text('Integrate Techno Trade:', midPadX, footerY + 5)
+  doc.setFont('helvetica', 'normal')
+
+  doc.text('Name:', leftPadX, valueTopY)
+  doc.text(signerName, midPadX, valueTopY)
+
+  doc.text('Designation:', leftPadX, designationY)
+  doc.text(signerDesignation, midPadX, designationY)
+
+  doc.text('Signature:', leftPadX, signatureY)
+  // Wide blank band under Signature for manual seal + signature.
+
+  doc.text('Date:', leftPadX, dateY)
+  doc.text(footerDate, midPadX, dateY)
+
+  doc.setFont('helvetica', 'bold')
+  doc.text('Customer:', MARGIN + colW * 2 + 3, footerY + 5)
 
   doc.save(`MOM-Report-${safePdfSlug(report.company_name || 'report')}.pdf`)
 }

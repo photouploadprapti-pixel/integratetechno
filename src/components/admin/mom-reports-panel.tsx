@@ -9,6 +9,7 @@ import { momColumns } from '@/data/admin'
 import { emptyDateFilter, matchesDateFilter } from '@/lib/date-filter'
 import { formatDisplayDate } from '@/lib/mom'
 import { downloadMomReportPdf } from '@/lib/mom-pdf'
+import { getStaffProfileByEmail } from '@/lib/staff-directory'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import type { MomReport, MomReportFormValues } from '@/types/mom'
@@ -191,13 +192,24 @@ export const MomReportsPanel = () => {
 
   /**
    * Generates and downloads a MOM Report PDF for one row.
+   * Autofills Name/Designation from the logged-in staff directory profile.
    * @param report - Report to print
    */
   const handlePrint = async (report: MomReport) => {
     setPrintingId(report.id)
     setListError('')
     try {
-      await downloadMomReportPdf(report)
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      const profile = getStaffProfileByEmail(user?.email)
+      await downloadMomReportPdf(
+        report,
+        profile
+          ? { name: profile.name, designation: profile.designation }
+          : null,
+      )
     } catch (printError) {
       const message =
         printError instanceof Error ? printError.message : 'Failed to generate MOM PDF'
