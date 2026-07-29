@@ -95,6 +95,7 @@ export const MomReportsPanel = () => {
       signer_name: profile?.name || '',
       signer_designation: profile?.designation || '',
       signer_date: today,
+      customer_signer_date: today,
       mom_date: today,
     })
     setModalOpen(true)
@@ -153,6 +154,9 @@ export const MomReportsPanel = () => {
       signer_name: values.signer_name.trim() || null,
       signer_designation: values.signer_designation.trim() || null,
       signer_date: values.signer_date || null,
+      customer_signer_name: values.customer_signer_name.trim() || null,
+      customer_signer_designation: values.customer_signer_designation.trim() || null,
+      customer_signer_date: values.customer_signer_date || null,
     }
 
     if (modalMode === 'edit' && editingReport) {

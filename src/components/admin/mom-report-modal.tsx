@@ -284,8 +284,8 @@ export const MomReportModal = ({
                 PDF signature block
               </p>
               <p className="mb-4 text-xs text-[#7a8699]">
-                These values appear in the Customer Remarks and Integrate Techno Trade
-                columns on the printed PDF. Signature stays blank for handwritten use.
+                These values appear in the Customer Remarks and signature columns on the
+                printed PDF. Signature stays blank for handwritten use.
               </p>
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Customer Remarks" className="sm:col-span-2">
@@ -300,34 +300,81 @@ export const MomReportModal = ({
                   />
                 </Field>
 
-                <Field label="Name">
-                  <input
-                    value={values.signer_name}
-                    onChange={(event) => updateField('signer_name', event.target.value)}
-                    placeholder="Integrate Techno Trade signer name"
-                    className={inputClassName}
-                  />
-                </Field>
+                <div className="sm:col-span-2">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#4a5568]">
+                    Integrate Techno Trade
+                  </p>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field label="Name">
+                      <input
+                        value={values.signer_name}
+                        onChange={(event) =>
+                          updateField('signer_name', event.target.value)
+                        }
+                        placeholder="Signer name"
+                        className={inputClassName}
+                      />
+                    </Field>
+                    <Field label="Designation">
+                      <input
+                        value={values.signer_designation}
+                        onChange={(event) =>
+                          updateField('signer_designation', event.target.value)
+                        }
+                        placeholder="e.g. Service Engineer"
+                        className={inputClassName}
+                      />
+                    </Field>
+                    <Field label="Date" className="sm:col-span-2">
+                      <input
+                        type="date"
+                        value={values.signer_date}
+                        onChange={(event) =>
+                          updateField('signer_date', event.target.value)
+                        }
+                        className={inputClassName}
+                      />
+                    </Field>
+                  </div>
+                </div>
 
-                <Field label="Designation">
-                  <input
-                    value={values.signer_designation}
-                    onChange={(event) =>
-                      updateField('signer_designation', event.target.value)
-                    }
-                    placeholder="e.g. Service Engineer"
-                    className={inputClassName}
-                  />
-                </Field>
-
-                <Field label="Date" className="sm:col-span-2">
-                  <input
-                    type="date"
-                    value={values.signer_date}
-                    onChange={(event) => updateField('signer_date', event.target.value)}
-                    className={inputClassName}
-                  />
-                </Field>
+                <div className="sm:col-span-2">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#4a5568]">
+                    Customer
+                  </p>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field label="Name">
+                      <input
+                        value={values.customer_signer_name}
+                        onChange={(event) =>
+                          updateField('customer_signer_name', event.target.value)
+                        }
+                        placeholder="Customer signer name"
+                        className={inputClassName}
+                      />
+                    </Field>
+                    <Field label="Designation">
+                      <input
+                        value={values.customer_signer_designation}
+                        onChange={(event) =>
+                          updateField('customer_signer_designation', event.target.value)
+                        }
+                        placeholder="Customer designation"
+                        className={inputClassName}
+                      />
+                    </Field>
+                    <Field label="Date" className="sm:col-span-2">
+                      <input
+                        type="date"
+                        value={values.customer_signer_date}
+                        onChange={(event) =>
+                          updateField('customer_signer_date', event.target.value)
+                        }
+                        className={inputClassName}
+                      />
+                    </Field>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

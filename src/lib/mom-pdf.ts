@@ -166,13 +166,17 @@ export const downloadMomReportPdf = async (
   const signerName = report.signer_name?.trim() || signer?.name?.trim() || ''
   const signerDesignation =
     report.signer_designation?.trim() || signer?.designation?.trim() || ''
-  const footerDate =
-    formatPdfDate(report.signer_date) || reportDate
+  const footerDate = formatPdfDate(report.signer_date) || reportDate
+  const customerName = report.customer_signer_name?.trim() || ''
+  const customerDesignation = report.customer_signer_designation?.trim() || ''
+  const customerDate =
+    formatPdfDate(report.customer_signer_date) || footerDate
 
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(9)
   const leftPadX = MARGIN + 3
   const midPadX = MARGIN + colW + 3
+  const rightPadX = MARGIN + colW * 2 + 3
   const valueTopY = footerY + 12
   const designationY = valueTopY + 7
   const signatureY = designationY + 8
@@ -180,22 +184,23 @@ export const downloadMomReportPdf = async (
 
   doc.setFont('helvetica', 'bold')
   doc.text('Integrate Techno Trade:', midPadX, footerY + 5)
+  doc.text('Customer:', rightPadX, footerY + 5)
   doc.setFont('helvetica', 'normal')
 
   doc.text('Name:', leftPadX, valueTopY)
   doc.text(signerName, midPadX, valueTopY)
+  doc.text(customerName, rightPadX, valueTopY)
 
   doc.text('Designation:', leftPadX, designationY)
   doc.text(signerDesignation, midPadX, designationY)
+  doc.text(customerDesignation, rightPadX, designationY)
 
   doc.text('Signature:', leftPadX, signatureY)
-  // Wide blank band under Signature for manual seal + signature.
+  // Wide blank band under Signature for manual seal + signature on both sides.
 
   doc.text('Date:', leftPadX, dateY)
   doc.text(footerDate, midPadX, dateY)
-
-  doc.setFont('helvetica', 'bold')
-  doc.text('Customer:', MARGIN + colW * 2 + 3, footerY + 5)
+  doc.text(customerDate, rightPadX, dateY)
 
   doc.save(`MOM-Report-${safePdfSlug(report.company_name || 'report')}.pdf`)
 }

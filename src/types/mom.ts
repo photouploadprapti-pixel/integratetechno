@@ -23,6 +23,12 @@ export interface MomReport {
   signer_designation: string | null
   /** Date shown in the Integrate Techno Trade PDF footer column. */
   signer_date: string | null
+  /** Customer signer name on the PDF footer. */
+  customer_signer_name: string | null
+  /** Customer signer designation on the PDF footer. */
+  customer_signer_designation: string | null
+  /** Date shown in the Customer PDF footer column. */
+  customer_signer_date: string | null
   created_at?: string
   updated_at?: string
 }
@@ -47,4 +53,7 @@ export interface MomReportFormValues {
   signer_name: string
   signer_designation: string
   signer_date: string
+  customer_signer_name: string
+  customer_signer_designation: string
+  customer_signer_date: string
 }
