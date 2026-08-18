@@ -11,17 +11,22 @@ This file is the project map for continuing work on a new computer after cloning
 
 ## 0) Security rule (read this first)
 
-**Do not put real passwords, API keys, or service-role keys into this repo.**
+`.env.local` is **tracked in this repo by explicit owner request** so a new PC can clone and run immediately.
 
-`.env.local` is gitignored on purpose. If you commit real secrets to GitHub, anyone with repo access (or a public repo) can take over Supabase / Vercel.
+**Required:** keep the GitHub repository **private**. Anyone with read access can use the Supabase service role / DB password.
+
+If this repo was ever public, or access leaked:
+
+1. Rotate Supabase `service_role` key
+2. Reset the database password
+3. Update Vercel env vars
+4. Commit the new `.env.local`
 
 When you change PCs:
 
 1. Clone this repo from GitHub.
-2. Copy `.env.local` privately (USB drive, password manager secure note, encrypted zip, or 1Password/Bitwarden).
-3. Or rebuild `.env.local` from Supabase + Vercel dashboards using the checklist below.
-
-If you need a private backup of secrets, keep it **outside GitHub**.
+2. `.env.local` should already be present after clone.
+3. Run `npm install` and `npm run dev`.
 
 ---
 
@@ -42,15 +47,17 @@ cd integratetechno
 npm install
 ```
 
-### 1.3 Create `.env.local`
+### 1.3 Environment file
 
-Copy from `.env.example`, then fill real values:
+`.env.local` is included in the repo for handoff. After clone it should already exist.
+
+If it is missing, copy from `.env.example` and fill values from Supabase:
 
 ```bash
 cp .env.example .env.local
 ```
 
-Required variables (names only — fill values from dashboards):
+Required variables:
 
 ```env
 # Public (browser-safe)
@@ -348,21 +355,14 @@ git push -u origin HEAD
 ## 8) Transfer checklist when changing PC
 
 - [ ] Clone GitHub repo
+- [ ] Confirm `.env.local` is present (tracked in repo)
 - [ ] `npm install`
-- [ ] Restore `.env.local` privately (or recreate from Supabase/Vercel)
 - [ ] Confirm login works (`/login`)
 - [ ] Confirm CMS image upload works (`/editor/landing`)
 - [ ] Confirm admin MOM print PDF shows signature block fields
 - [ ] Confirm Git push uses the correct GitHub account
 - [ ] Confirm Vercel still auto-deploys from `master`
-
-Private items to carry yourself (not in GitHub):
-
-- [ ] `.env.local` full file
-- [ ] Supabase dashboard login
-- [ ] Vercel dashboard login
-- [ ] GitHub account with write access
-- [ ] Any staff user passwords (Auth users live in Supabase Auth — reset from dashboard if forgotten)
+- [ ] Confirm GitHub repo is **private**
 
 ---
 
@@ -394,7 +394,7 @@ Apply:
 When continuing this project:
 
 1. Prefer existing patterns in `src/components/admin` and `src/lib/*-pdf.ts`.
-2. Do not commit secrets.
+2. Do not commit additional secrets beyond the intentional `.env.local` handoff file; keep the GitHub repo private.
 3. After schema changes, add a Supabase migration under `supabase/migrations/`.
 4. For CMS media, keep using `/api/cms/upload` + service role.
 5. Use conventional commits (`feat`, `fix`, `chore`, …).
